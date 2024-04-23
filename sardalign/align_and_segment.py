@@ -1,17 +1,16 @@
-import argparse
 import json
 import os
+from argparse import ArgumentParser, Namespace
 
 import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
+from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
 
 
-SAMPLING_FREQ = 16000
-EMISSION_INTERVAL = 30
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -146,8 +145,14 @@ def main(args):
     return segments, stride
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Align and segment long audio files")
+def echo_environment_info() -> None:
+    print("Using torch version:", torch.__version__)
+    print("Using torchaudio version:", torchaudio.__version__)
+    print("Using device: ", DEVICE)
+
+
+def parse_args() -> Namespace:
+    parser = ArgumentParser(description="Align and segment long audio files")
     parser.add_argument("-a", "--audio_filepath", type=str, help="Path to input audio file")
     parser.add_argument("-t", "--text_filepath", type=str, help="Path to input text file ")
     parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
@@ -164,8 +169,9 @@ if __name__ == "__main__":
         type=str,
         help="Output directory to store segmented audio files",
     )
-    print("Using torch version:", torch.__version__)
-    print("Using torchaudio version:", torchaudio.__version__)
-    print("Using device: ", DEVICE)
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
     main(args)
