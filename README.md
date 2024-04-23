@@ -2,6 +2,14 @@
 
 Scripts to align speech audio with their text transcriptions in time. 
 
+## Clone Repository
+
+```bash
+git clone git@github.com:anilkeshwani/speech-text-alignment.git && 
+    cd speech-text-alignment &&
+    git submodule update --init --recursive --progress
+```
+
 ## Setup - OSX
 
 ```bash
