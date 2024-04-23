@@ -6,6 +6,7 @@ import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
+
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
@@ -157,18 +158,8 @@ def parse_args() -> Namespace:
     parser.add_argument("-t", "--text_filepath", type=str, help="Path to input text file ")
     parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("-u", "--uroman_path", type=str, default="eng", help="Location to uroman/bin")
-    parser.add_argument(
-        "-s",
-        "--use_star",
-        action="store_true",
-        help="Use star at the start of transcript",
-    )
-    parser.add_argument(
-        "-o",
-        "--outdir",
-        type=str,
-        help="Output directory to store segmented audio files",
-    )
+    parser.add_argument("-s", "--use_star", action="store_true", help="Use star at the start of transcript")
+    parser.add_argument("-o", "--outdir", type=str, help="Output directory to store segmented audio files")
     return parser.parse_args()
 
 
