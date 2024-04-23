@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import torch
+
 
 def write_jsonl(
     jsonl: Path, samples: list[dict], mode: str = "x", encoding: str = "utf-8", ensure_ascii: bool = False
