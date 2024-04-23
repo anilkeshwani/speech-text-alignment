@@ -10,22 +10,27 @@ git clone git@github.com:anilkeshwani/speech-text-alignment.git &&
     git submodule update --init --recursive --progress
 ```
 
-## Setup - OSX
-
-```bash
-brew install ffmpeg sox
-```
-
-```bash
-conda create -n sta python=3.11 -y &&
-    conda activate sta &&
-    pip install -r requirements.txt
-```
-
 ## Setup - Linux - `TODO`
 
 > Complete section when running on Artemis / Poseidon. CUDA information below:
 > `NVIDIA-SMI 525.89.02    Driver Version: 525.89.02    CUDA Version: 12.0`
+
+<details>
+  <summary>Setup - OSX</summary>
+  
+  ### Setup - OSX
+
+  ```bash
+  brew install ffmpeg sox
+  ```
+
+  ```bash
+  conda create -n sta python=3.11 -y &&
+      conda activate sta &&
+      pip install -r requirements.txt
+  ```
+
+</details>
 
 ## Performing Alignment
 
