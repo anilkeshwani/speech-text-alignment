@@ -22,9 +22,11 @@ apt install sox
 
 <details>
   <summary>Instal binaries on OSX with Homebrew</summary>
+  
   ```bash
   brew install ffmpeg sox
   ```
+  
 </details>
 
 > Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.11.
