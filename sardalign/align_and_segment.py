@@ -10,6 +10,7 @@ import torchaudio.functional as F
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
+from sardalign.utils import echo_environment_info
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -89,6 +90,7 @@ def get_alignments(
 
 
 def main(args):
+    echo_environment_info(torch, torchaudio, DEVICE)
     assert not os.path.exists(args.outdir), f"Error: Output path exists already {args.outdir}"
 
     transcripts = []
@@ -144,12 +146,6 @@ def main(args):
             f.write(json.dumps(sample) + "\n")
 
     return segments, stride
-
-
-def echo_environment_info() -> None:
-    print("Using torch version:", torch.__version__)
-    print("Using torchaudio version:", torchaudio.__version__)
-    print("Using device: ", DEVICE)
 
 
 def parse_args() -> Namespace:
