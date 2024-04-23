@@ -22,7 +22,7 @@ def normalize_uroman(text: str) -> str:
     return text.strip()
 
 
-def get_uroman_tokens(norm_transcripts, uroman_root_dir, iso=None):
+def get_uroman_tokens(norm_transcripts: list[str], uroman_root_dir: str, iso: str | None = None):
     tf = tempfile.NamedTemporaryFile()
     tf2 = tempfile.NamedTemporaryFile()
     with open(tf.name, "w") as f:
