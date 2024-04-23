@@ -9,38 +9,58 @@ import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
+
 from sardalign.align_and_segment import generate_emissions, get_alignments
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
-from sardalign.utils import read_jsonl
+from sardalign.utils import echo_environment_info, read_jsonl
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-SPLIT_TOKEN_DELIMITER = None  # None (default to str.split) splits on any whitespace
+TOKEN_DELIMITER_SPLIT: str | None = None  # None (default to str.split) splits on any whitespace
 
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("--jsonl", required=True, type=Path, help="Path to input JSON Lines file")
-    parser.add_argument("--outdir", required=True, type=Path, help="Path to the output directory")
-    parser.add_argument("--lang", default="en-US", type=str, help="Path to the output directory")
-    return parser.parse_args()
+    parser.add_argument("-j", "--jsonl", required=True, type=Path, help="Path to input JSON Lines file")
+    parser.add_argument("-o", "--outdir", required=True, type=Path, help="Output directory for segmented audio files")
+    parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
+    parser.add_argument("-u", "--uroman-path", default=None, type=Path, help="Location to uroman/bin")
+    parser.add_argument("-s", "--use-star", action="store_true", help="Use star at the start of transcript")
+    args = parser.parse_args()
+    if args.uroman_path is None:
+        args.uroman_path = Path(__file__).parents[1] / "submodules" / "uroman" / "bin"
+    return args
 
 
 def main(args):
-    if args.outdir.exits():
+    echo_environment_info(torch, torchaudio, DEVICE)
+    if args.outdir.exists():
         raise FileExistsError(f"Output path exists already {args.outdir}")
 
     dataset = read_jsonl(args.jsonl)
     print(f"Read {len(dataset)} lines from {args.jsonl}")
 
-    norm_transcripts = [
-        text_normalize(line["normalized_transcription"].strip().split(SPLIT_TOKEN_DELIMITER), args.lang)
-        for line in transcripts
+    norm_transcripts_s = [
+        [
+            text_normalize(normed_transcript, args.lang)
+            for normed_transcript in s["normalized_transcription"].strip().split(TOKEN_DELIMITER_SPLIT)
+        ]
+        for s in dataset
     ]
-    tokens = get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang)
+
+    # tokens_s = [
+    #     get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang) for norm_transcripts in norm_transcripts_s
+    # ]
+
+    tokens_s = [
+        get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang) for norm_transcripts in norm_transcripts_s[:2]
+    ]
+
+    print(tokens_s[0])
+    print(type(tokens_s[0]))
 
     model, dictionary = load_model_dict()
     model = model.to(DEVICE)
@@ -87,3 +107,8 @@ def main(args):
             f.write(json.dumps(sample) + "\n")
 
     return segments, stride
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)
