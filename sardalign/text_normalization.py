@@ -4,7 +4,9 @@ import unicodedata
 from sardalign.norm_config import norm_config
 
 
-def text_normalize(text, iso_code, lower_case=True, remove_numbers=True, remove_brackets=False):
+def text_normalize(
+    text: str, iso_code: str, lower_case: bool = True, remove_numbers: bool = True, remove_brackets: bool = False
+):
     """Given a text, normalize it by changing to lower case, removing punctuations, removing words that only contain digits and removing extra spaces
 
     Args:
