@@ -15,7 +15,7 @@ special_isos_uroman = "ara, bel, bul, deu, ell, eng, fas, grc, ell, eng, heb, ka
 special_isos_uroman = [i.strip() for i in special_isos_uroman]
 
 
-def normalize_uroman(text):
+def normalize_uroman(text: str) -> str:
     text = text.lower()
     text = re.sub("([^a-z' ])", " ", text)
     text = re.sub(" +", " ", text)
@@ -182,3 +182,14 @@ def get_spans(tokens, segments):
                 span = span + [Segment(sil, span[-1].end, pad_end)]
         spans.append(span)
     return spans
+
+
+if __name__ == "__main__":
+    from sardalign.text_normalization import text_normalize
+
+    UROMAN_ROOT_DIR = "/Users/anilkeshwani/Desktop/speech-text-alignment/submodules/uroman/bin"
+    TEXT = "This is a random line of text."
+    text_norm = text_normalize(TEXT, "eng")
+    get_uroman_tokens = get_uroman_tokens(text_norm, UROMAN_ROOT_DIR)
+    print(get_uroman_tokens)
+    print(sorted(get_uroman_tokens))
