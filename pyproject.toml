@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sardalign"
+authors = [
+{ name = "Anil Keshwani", email = "anilkeshwani1@gmail.com" },
+{ name = "Vineel Pratap", email = "vineelkpratap@meta.com" },
+]
+description = "A speech audio-transcript aligner packaged up from fairseq/examples/mms"
+requires-python = ">=3.11.9"
+license = { file = "LICENSE" }
+dynamic = ["dependencies", "version", "readme"]
+
+[tool.setuptools]
+packages = ["sardalign"]
+
+[tool.setuptools_scm]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+readme = { file = ["README.md"] }
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+lines_after_imports = 2
+force_alphabetical_sort_within_sections = true
