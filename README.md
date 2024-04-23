@@ -26,7 +26,7 @@ apt install sox
   ```bash
   brew install ffmpeg sox
   ```
-  
+
 </details>
 
 > Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.11.
@@ -37,11 +37,15 @@ conda create -n sardalign python=3.11 -y &&
     pip install -e .  # editable install - changes to the repository are reflected live
 ```
 
-> Note: When running on Artemis / Poseidon, ensure support for CUDA is provided. 
-> At the time of writing, NVIDIA / CUDA drivers were:
-> - NVIDIA-SMI: 525.89.02
-> - Driver Version: 525.89.02
-> - CUDA Version: 12.0
+<details>
+  <summary>Note: When running on Artemis / Poseidon, ensure support for CUDA is provided</summary>
+  
+  At the time of writing, NVIDIA / CUDA drivers were:
+  - NVIDIA-SMI: 525.89.02
+  - Driver Version: 525.89.02
+  - CUDA Version: 12.0
+  
+</details>
 
 ## Performing Alignment
 
