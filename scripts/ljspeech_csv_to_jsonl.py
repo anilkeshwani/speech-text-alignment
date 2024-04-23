@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import csv
-import json
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+
+from sardalign.utils import write_jsonl
 
 
 def parse_args() -> Namespace:
@@ -11,11 +12,6 @@ def parse_args() -> Namespace:
     parser.add_argument("--csv", required=True, type=Path, help="Path to the LJSpeech metadata CSV file")
     parser.add_argument("--jsonl", required=True, type=Path, help="Path to output the JSON Lines file")
     return parser.parse_args()
-
-
-def write_jsonl(jsonl: Path, samples: list[dict], mode="x", encoding="utf-8", ensure_ascii=False):
-    with open(jsonl, mode=mode, encoding=encoding) as f:
-        f.write("\n".join(json.dumps(sd, ensure_ascii=ensure_ascii) for sd in samples) + "\n")
 
 
 def main(args: Namespace) -> None:
