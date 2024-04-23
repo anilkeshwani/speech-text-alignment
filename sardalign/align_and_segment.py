@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 from argparse import ArgumentParser, Namespace
 
 import sox
@@ -14,10 +15,11 @@ from sardalign.utils import echo_environment_info
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+TORCHAUDIO_BACKEND = "soundfile" if platform.system() == "Darwin" else None
 
 
 def generate_emissions(model, audio_file):
-    waveform, _ = torchaudio.load(audio_file)  # waveform: channels X T
+    waveform, _ = torchaudio.load(audio_file, backend=TORCHAUDIO_BACKEND)  # waveform: channels X T
     waveform = waveform.to(DEVICE)
     total_duration = sox.file_info.duration(audio_file)
 
