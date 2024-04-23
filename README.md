@@ -2,7 +2,9 @@
 
 Scripts to align speech audio with their text transcriptions in time. 
 
-## Clone Repository
+## Setup
+
+### Clone Repository
 
 ```bash
 git clone git@github.com:anilkeshwani/speech-text-alignment.git && 
@@ -10,10 +12,27 @@ git clone git@github.com:anilkeshwani/speech-text-alignment.git &&
     git submodule update --init --recursive --progress
 ```
 
-## Setup - Linux - `TODO`
+### Set Up Environment
 
-> Complete section when running on Artemis / Poseidon. CUDA information below:
-> `NVIDIA-SMI 525.89.02    Driver Version: 525.89.02    CUDA Version: 12.0`
+Ensure the necessary binary requirements are installed:
+
+```bash
+apt install sox
+```
+
+> Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.11.
+
+```bash
+conda create -n sardalign python=3.11 -y &&
+    conda activate sardalign &&
+    pip install -e .  # editable install - changes to the repository are reflected live
+```
+
+> Note: When running on Artemis / Poseidon, ensure support for CUDA is provided. 
+> At the time of writing, NVIDIA / CUDA drivers were:
+> - NVIDIA-SMI: 525.89.02
+> - Driver Version: 525.89.02
+> - CUDA Version: 12.0
 
 <details>
   <summary>Setup - OSX</summary>
