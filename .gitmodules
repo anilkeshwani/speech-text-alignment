@@ -1,6 +1,6 @@
 [submodule "fairseq"]
-	path = fairseq
+	path = submodules/fairseq
 	url = https://github.com/facebookresearch/fairseq.git
 [submodule "uroman"]
-	path = uroman
+	path = submodules/uroman
 	url = git@github.com:isi-nlp/uroman.git
