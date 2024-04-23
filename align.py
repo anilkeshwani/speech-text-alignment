@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import platform
 import string
-import wave
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from pathlib import Path
