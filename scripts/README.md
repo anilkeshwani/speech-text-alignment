@@ -7,11 +7,13 @@ Converts the [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/) metadat
 - ID
 - transcript
 - normalized transcript
+- [optional]: additional `"lang"` field containing the ISO `"en-US"` code
 
 Usage:
 
 ```bash
 ./ljspeech_csv_to_jsonl.py \
     --csv /mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/metadata.csv \
-    --jsonl /mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/metadata.jsonl
+    --jsonl /mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/metadata.jsonl \
+    --add-lang-code
 ```
