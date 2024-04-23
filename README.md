@@ -38,7 +38,7 @@ conda create -n sardalign python=3.11 -y &&
 ```
 
 <details>
-  <summary>Note: When running on Artemis / Poseidon, ensure support for CUDA is provided</summary>
+  <summary>Note: When running on Artemis / Poseidon, ensure support for CUDA is provided.</summary>
   
   At the time of writing, NVIDIA / CUDA drivers were:
   - NVIDIA-SMI: 525.89.02
