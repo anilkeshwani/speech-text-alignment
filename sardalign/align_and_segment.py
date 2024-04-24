@@ -7,7 +7,6 @@ import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
-
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
@@ -95,15 +94,17 @@ def main(args):
     echo_environment_info(torch, torchaudio, DEVICE)
     assert not os.path.exists(args.outdir), f"Error: Output path exists already {args.outdir}"
 
-    transcripts = []
+    transcripts: list[str] = []
     with open(args.text_filepath) as f:
         transcripts = [line.strip() for line in f]
     print("Read {} lines from {}".format(len(transcripts), args.text_filepath))
 
-    norm_transcripts = [text_normalize(line.strip(), args.lang) for line in transcripts]
-    tokens = get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang)
+    norm_transcripts: list[str] = [text_normalize(line.strip(), args.lang) for line in transcripts]
+
+    tokens: list[str] = get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang)
 
     model, dictionary = load_model_dict()
+
     model = model.to(DEVICE)
     if args.use_star:
         dictionary["<star>"] = len(dictionary)
