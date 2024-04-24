@@ -51,6 +51,14 @@ conda create -n sardalign python=3.11 -y &&
 
 > ...
 
+Provisional call:
+
+```
+./segment_tokens.py \
+    --jsonl /Users/anilkeshwani/Desktop/data/LJSpeech-1.1/metadata.jsonl \
+    --outdir ./tmp/sardalign
+```
+
 ## Dev Containers - `TODO`
 
 We provide a _devcontainer.json_ to allow for development inside a containerised environment via VSCode. This enables installation of Linux binary dependencies such as [FFmpeg](https://ffmpeg.org/) or [SoX](https://en.wikipedia.org/wiki/SoX) via `apt` without requiring sudo permissions on the host machine. 
