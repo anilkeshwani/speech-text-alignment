@@ -1,27 +1,18 @@
 #!/usr/bin/env python
 
 import json
-import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from pprint import pprint
 
 import sox
 import torch
 import torchaudio
-import torchaudio.functional as F
 
-from sardalign.align_and_segment import generate_emissions, get_alignments
-from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
-from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ, STAR_TOKEN
+from sardalign.align_and_segment import get_alignments
+from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict
+from sardalign.constants import STAR_TOKEN
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device, ljspeech_id_to_path, read_jsonl
-
-
-DEVICE = get_device()
-
-TOKEN_DELIMITER_SPLIT: str | None = None  # None (default to str.split) splits on any whitespace
-LJSPEECH_WAVS_DIR = Path("/media/scratch/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000")
 
 
 def parse_args() -> Namespace:
@@ -31,6 +22,9 @@ def parse_args() -> Namespace:
     parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("-u", "--uroman-path", default=None, type=Path, help="Location to uroman/bin")
     parser.add_argument("-s", "--use-star", action="store_true", help="Use star at the start of transcript")
+    parser.add_argument(
+        "--transcript-stem-suffix", action="store_true", help="Append transcript span to output audio filenames"
+    )
     parser.add_argument("--sample", default=None, type=int, help="Use a sample of the dataset for testing purposes")
     args = parser.parse_args()
     if args.uroman_path is None:
@@ -39,20 +33,23 @@ def parse_args() -> Namespace:
 
 
 def main(args):
+    DEVICE = get_device()
+    TOKEN_DELIMITER_SPLIT: str | None = None  # None (default to str.split) splits on any whitespace
+    LJSPEECH_WAVS_DIR = Path("/media/scratch/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000")
     TEXT_KEY: str = "normalized_transcription"
+
     echo_environment_info(torch, torchaudio, DEVICE)
+
     args.outdir.mkdir(parents=True, exist_ok=False)
 
     dataset = read_jsonl(args.jsonl)
     if args.sample is not None:
         dataset = dataset[: args.sample]
     print(f"Read {len(dataset)} lines from {args.jsonl}")
+
     transcripts_s: list[list[str]] = [s[TEXT_KEY].strip().split(TOKEN_DELIMITER_SPLIT) for s in dataset]
     norm_transcripts_s = [[text_normalize(token, args.lang) for token in transcripts] for transcripts in transcripts_s]
-
-    tokens_s = [
-        get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang) for norm_transcripts in norm_transcripts_s
-    ]
+    tokens_s = [get_uroman_tokens(nt, args.uroman_path, args.lang) for nt in norm_transcripts_s]
 
     model, dictionary = load_model_dict()
     model = model.to(DEVICE)
@@ -72,7 +69,6 @@ def main(args):
         audio_path = ljspeech_id_to_path(lj_id, wavs_dir=LJSPEECH_WAVS_DIR)
         segments, stride = get_alignments(audio_path, tokens, model, dictionary, args.use_star)
 
-        # Get spans of each line in input text file
         spans = get_spans(tokens, segments)
 
         outdir_segment = args.outdir / lj_id
@@ -83,10 +79,11 @@ def main(args):
                 seg_start_idx = span[0].start
                 seg_end_idx = span[-1].end
 
-                output_file = (outdir_segment / f"segment_{i}_{t}").with_suffix(".flac")
-
                 audio_start_sec = seg_start_idx * stride / 1000
                 audio_end_sec = seg_end_idx * stride / 1000
+
+                transcript_stem_suffix = f"_{t}" if args.transcript_stem_suffix else ""
+                output_file = (outdir_segment / f"segment_{i}{transcript_stem_suffix}").with_suffix(".flac")
 
                 tfm = sox.Transformer()
                 tfm.trim(audio_start_sec, audio_end_sec)

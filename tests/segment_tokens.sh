@@ -18,5 +18,6 @@ rm -rf /home/anilkeshwani/speech-text-alignment/tests/output/segment_tokens
         --lang "$LANG" \
         --outdir "$OUTPUT_DIR" \
         --uroman "$UROMAN_BINARY" \
+        --transcript-stem-suffix \
         --sample 10
 )
