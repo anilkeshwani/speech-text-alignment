@@ -2,25 +2,28 @@ import json
 import os
 import platform
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
 import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
+
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
-from sardalign.utils import echo_environment_info
+from sardalign.utils import echo_environment_info, get_device
 
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = get_device()
 TORCHAUDIO_BACKEND = "soundfile" if platform.system() == "Darwin" else None
 
 
-def generate_emissions(model, audio_file):
+def generate_emissions(model, audio_file: str | Path):
     waveform, _ = torchaudio.load(audio_file, backend=TORCHAUDIO_BACKEND)  # waveform: channels X T
     waveform = waveform.to(DEVICE)
     total_duration = sox.file_info.duration(audio_file)
+    assert total_duration is not None
 
     audio_sf = sox.file_info.sample_rate(audio_file)
     assert audio_sf == SAMPLING_FREQ
@@ -153,7 +156,7 @@ def main(args):
 
 def parse_args() -> Namespace:
     parser = ArgumentParser(description="Align and segment long audio files")
-    parser.add_argument("-a", "--audio_filepath", type=str, help="Path to input audio file")
+    parser.add_argument("-a", "--audio_filepath", type=Path, help="Path to input audio file")
     parser.add_argument("-t", "--text_filepath", type=str, help="Path to input text file ")
     parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("-u", "--uroman_path", type=str, default="eng", help="Location to uroman/bin")

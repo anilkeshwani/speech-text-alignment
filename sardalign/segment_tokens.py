@@ -4,6 +4,7 @@ import json
 import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from pprint import pprint
 
 import sox
 import torch
@@ -12,14 +13,15 @@ import torchaudio.functional as F
 
 from sardalign.align_and_segment import generate_emissions, get_alignments
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
-from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
+from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ, STAR_TOKEN
 from sardalign.text_normalization import text_normalize
-from sardalign.utils import echo_environment_info, read_jsonl
+from sardalign.utils import echo_environment_info, get_device, ljspeech_id_to_path, read_jsonl
 
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = get_device()
 
 TOKEN_DELIMITER_SPLIT: str | None = None  # None (default to str.split) splits on any whitespace
+LJSPEECH_WAVS_DIR = Path("/media/scratch/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000")
 
 
 def parse_args() -> Namespace:
@@ -29,6 +31,7 @@ def parse_args() -> Namespace:
     parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("-u", "--uroman-path", default=None, type=Path, help="Location to uroman/bin")
     parser.add_argument("-s", "--use-star", action="store_true", help="Use star at the start of transcript")
+    parser.add_argument("--sample", default=None, type=int, help="Use a sample of the dataset for testing purposes")
     args = parser.parse_args()
     if args.uroman_path is None:
         args.uroman_path = Path(__file__).parents[1] / "submodules" / "uroman" / "bin"
@@ -36,77 +39,73 @@ def parse_args() -> Namespace:
 
 
 def main(args):
+    TEXT_KEY: str = "normalized_transcription"
     echo_environment_info(torch, torchaudio, DEVICE)
-    if args.outdir.exists():
-        raise FileExistsError(f"Output path exists already {args.outdir}")
+    args.outdir.mkdir(parents=True, exist_ok=False)
 
     dataset = read_jsonl(args.jsonl)
+    if args.sample is not None:
+        dataset = dataset[: args.sample]
     print(f"Read {len(dataset)} lines from {args.jsonl}")
-
-    norm_transcripts_s = [
-        [
-            text_normalize(normed_transcript, args.lang)
-            for normed_transcript in s["normalized_transcription"].strip().split(TOKEN_DELIMITER_SPLIT)
-        ]
-        for s in dataset
-    ]
-
-    # tokens_s = [
-    #     get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang) for norm_transcripts in norm_transcripts_s
-    # ]
+    transcripts_s: list[list[str]] = [s[TEXT_KEY].strip().split(TOKEN_DELIMITER_SPLIT) for s in dataset]
+    norm_transcripts_s = [[text_normalize(token, args.lang) for token in transcripts] for transcripts in transcripts_s]
 
     tokens_s = [
-        get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang) for norm_transcripts in norm_transcripts_s[:2]
+        get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang) for norm_transcripts in norm_transcripts_s
     ]
-
-    print(tokens_s[0])
-    print(type(tokens_s[0]))
 
     model, dictionary = load_model_dict()
     model = model.to(DEVICE)
+
     if args.use_star:
-        dictionary["<star>"] = len(dictionary)
-        tokens = ["<star>"] + tokens
-        transcripts = ["<star>"] + transcripts
-        norm_transcripts = ["<star>"] + norm_transcripts
+        dictionary[STAR_TOKEN] = len(dictionary)
+        tokens_s = [[STAR_TOKEN] + tokens for tokens in tokens_s]
+        transcripts_s = [[STAR_TOKEN] + transcripts for transcripts in transcripts_s]
+        norm_transcripts_s = [[STAR_TOKEN] + norm_transcripts for norm_transcripts in norm_transcripts_s]
 
-    segments, stride = get_alignments(
-        args.audio_filepath,
-        tokens,
-        model,
-        dictionary,
-        args.use_star,
-    )
-    # Get spans of each line in input text file
-    spans = get_spans(tokens, segments)
+    ljspeech_id_s = [sd["ID"] for sd in dataset]
+    assert len(tokens_s) == len(transcripts_s) == len(norm_transcripts_s) == len(ljspeech_id_s)
 
-    os.makedirs(args.outdir)
-    with open(f"{args.outdir}/manifest.json", "w") as f:
-        for i, t in enumerate(transcripts):
-            span = spans[i]
-            seg_start_idx = span[0].start
-            seg_end_idx = span[-1].end
+    segments_s, stride_s = [], []
 
-            output_file = f"{args.outdir}/segment{i}.flac"
+    for tokens, transcripts, norm_transcripts, lj_id in zip(tokens_s, transcripts_s, norm_transcripts_s, ljspeech_id_s):
+        audio_path = ljspeech_id_to_path(lj_id, wavs_dir=LJSPEECH_WAVS_DIR)
+        segments, stride = get_alignments(audio_path, tokens, model, dictionary, args.use_star)
 
-            audio_start_sec = seg_start_idx * stride / 1000
-            audio_end_sec = seg_end_idx * stride / 1000
+        # Get spans of each line in input text file
+        spans = get_spans(tokens, segments)
 
-            tfm = sox.Transformer()
-            tfm.trim(audio_start_sec, audio_end_sec)
-            tfm.build_file(args.audio_filepath, output_file)
+        outdir_segment = args.outdir / lj_id
+        outdir_segment.mkdir()
+        with open(outdir_segment / "manifest.json", "x") as f:
+            for i, t in enumerate(transcripts):
+                span = spans[i]
+                seg_start_idx = span[0].start
+                seg_end_idx = span[-1].end
 
-            sample = {
-                "audio_start_sec": audio_start_sec,
-                "audio_filepath": str(output_file),
-                "duration": audio_end_sec - audio_start_sec,
-                "text": t,
-                "normalized_text": norm_transcripts[i],
-                "uroman_tokens": tokens[i],
-            }
-            f.write(json.dumps(sample) + "\n")
+                output_file = (outdir_segment / f"segment_{i}_{t}").with_suffix(".flac")
 
-    return segments, stride
+                audio_start_sec = seg_start_idx * stride / 1000
+                audio_end_sec = seg_end_idx * stride / 1000
+
+                tfm = sox.Transformer()
+                tfm.trim(audio_start_sec, audio_end_sec)
+                tfm.build_file(audio_path, output_file)
+
+                sample = {
+                    "audio_start_sec": audio_start_sec,
+                    "audio_filepath": str(output_file),
+                    "duration": audio_end_sec - audio_start_sec,
+                    "text": t,
+                    "normalized_text": norm_transcripts[i],
+                    "uroman_tokens": tokens[i],
+                }
+                f.write(json.dumps(sample) + "\n")
+
+        segments_s.append(segments)
+        stride_s.append(stride)
+
+    return segments_s, stride_s
 
 
 if __name__ == "__main__":

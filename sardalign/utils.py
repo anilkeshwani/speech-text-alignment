@@ -29,3 +29,7 @@ def get_device(device: str | None = None) -> torch.device:
     mps_built = torch.backends.mps.is_built()
     local_device = "mps" if (mps_available and mps_built) else "cpu"
     return torch.device("cuda" if torch.cuda.is_available() else local_device)
+
+
+def ljspeech_id_to_path(lj_id: str, wavs_dir: Path, suffix: str = ".wav") -> Path:
+    return (wavs_dir / lj_id).with_suffix(suffix)
