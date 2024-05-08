@@ -20,3 +20,12 @@ def echo_environment_info(torch, torchaudio, device: torch.device) -> None:
     print("Using torch version:", torch.__version__)
     print("Using torchaudio version:", torchaudio.__version__)
     print("Using device: ", device)
+
+
+def get_device(device: str | None = None) -> torch.device:
+    if device is not None:
+        return torch.device(device)
+    mps_available = torch.backends.mps.is_available()
+    mps_built = torch.backends.mps.is_built()
+    local_device = "mps" if (mps_available and mps_built) else "cpu"
+    return torch.device("cuda" if torch.cuda.is_available() else local_device)
