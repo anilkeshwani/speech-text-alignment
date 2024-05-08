@@ -1,8 +1,8 @@
 #!/bin/bash
 
 source /home/kshitij/CoVoST/feat_ext/bin/activate
-cd /mnt/scratch/kshitij/fairseq/examples/hubert/simple_kmeans/
-ckpt_path=/mnt/scratch/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt
+cd /media/scratch/kshitij/fairseq/examples/hubert/simple_kmeans/
+ckpt_path='/media/scratch/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt'
 layer=22
 nshard=1
 rank=0
