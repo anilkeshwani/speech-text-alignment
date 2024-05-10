@@ -66,6 +66,7 @@ def main(args):
     segments_s, stride_s = [], []
 
     for tokens, transcripts, norm_transcripts, lj_id in zip(tokens_s, transcripts_s, norm_transcripts_s, ljspeech_id_s):
+        assert len(tokens) == len(transcripts) == len(norm_transcripts), "Inconsistent tokens after norm/uroman G2P"
         audio_path = ljspeech_id_to_path(lj_id, wavs_dir=LJSPEECH_WAVS_DIR)
         segments, stride = get_alignments(audio_path, tokens, model, dictionary, args.use_star)
 
