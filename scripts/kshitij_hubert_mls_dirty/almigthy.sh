@@ -7,7 +7,7 @@ layer=22
 nshard=1
 rank=0
 feat_dir=/mnt/scratch/kshitij/MLS/current_feat_dir/
-km_path=/mnt/scratch/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000
+km_path=/media/scratch/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000
 output_kmeans_dir=/mnt/scratch/kshitij/MLS/kmeans_lab_dir/
 tsv_dir=/mnt/scratch/sonal/common/mls_splits/
 
