@@ -49,14 +49,16 @@ conda create -n sardalign python=3.10.6 -y &&
 
 ## Performing Alignment
 
-> ...
+Example call:
 
-Provisional call:
-
-```
-./segment_tokens.py \
-    --jsonl /Users/anilkeshwani/Desktop/data/LJSpeech-1.1/metadata.jsonl \
-    --outdir ./tmp/sardalign
+```bash
+python ./sardalign/segment_tokens.py \
+    --jsonl "/media/scratch/anilkeshwani/data/LJSpeech-1.1/metadata.jsonl" \
+    --lang "eng" \
+    --outdir "/tmp/segment_tokens_output/" \
+    --uroman "./submodules/uroman/bin" \
+    --transcript-stem-suffix \
+    --sample 10
 ```
 
 ## Dev Containers - `TODO`

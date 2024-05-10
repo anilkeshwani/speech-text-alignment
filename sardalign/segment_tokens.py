@@ -18,6 +18,12 @@ from sardalign.utils import echo_environment_info, get_device, ljspeech_id_to_pa
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("-j", "--jsonl", required=True, type=Path, help="Path to input JSON Lines file")
+    parser.add_argument(
+        "--ljspeech-wavs-dir",
+        default=Path("/media/scratch/anilkeshwani/data/LJSpeech-1.1/wavs_16000"),
+        type=Path,
+        help="Path to directory containing wavs. Option specific to the LJSpeech dataset, whose manifest contains IDs",
+    )
     parser.add_argument("-o", "--outdir", required=True, type=Path, help="Output directory for segmented audio files")
     parser.add_argument("-l", "--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("-u", "--uroman-path", default=None, type=Path, help="Location to uroman/bin")
@@ -35,7 +41,6 @@ def parse_args() -> Namespace:
 def main(args):
     DEVICE = get_device()
     TOKEN_DELIMITER_SPLIT: str | None = None  # None (default to str.split) splits on any whitespace
-    LJSPEECH_WAVS_DIR = Path("/media/scratch/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000")
     TEXT_KEY: str = "normalized_transcription"
 
     echo_environment_info(torch, torchaudio, DEVICE)
@@ -67,7 +72,7 @@ def main(args):
 
     for tokens, transcripts, norm_transcripts, lj_id in zip(tokens_s, transcripts_s, norm_transcripts_s, ljspeech_id_s):
         assert len(tokens) == len(transcripts) == len(norm_transcripts), "Inconsistent tokens after norm/uroman G2P"
-        audio_path = ljspeech_id_to_path(lj_id, wavs_dir=LJSPEECH_WAVS_DIR)
+        audio_path = ljspeech_id_to_path(lj_id, wavs_dir=args.ljspeech_wavs_dir)
         segments, stride = get_alignments(audio_path, tokens, model, dictionary, args.use_star)
 
         spans = get_spans(tokens, segments)
