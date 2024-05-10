@@ -29,12 +29,12 @@ apt install sox
 
 </details>
 
-> Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.11.
+> Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.10.6.
 
 ```bash
-conda create -n sardalign python=3.11 -y &&
+conda create -n sardalign python=3.10.6 -y &&
     conda activate sardalign &&
-    pip install -e .  # editable install - changes to the repository are reflected live
+    pip install -e .
 ```
 
 <details>

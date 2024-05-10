@@ -9,7 +9,7 @@ authors = [
 { name = "Vineel Pratap", email = "vineelkpratap@meta.com" },
 ]
 description = "A speech audio-transcript aligner packaged up from fairseq/examples/mms"
-requires-python = ">=3.11.9"
+requires-python = "==3.10.6"
 license = { file = "LICENSE" }
 dynamic = ["dependencies", "version", "readme"]
 
