@@ -34,7 +34,7 @@ apt install sox
 ```bash
 conda create -n sardalign python=3.10.6 -y &&
     conda activate sardalign &&
-    pip install -e .
+    pip install -e .["dev"]
 ```
 
 <details>
