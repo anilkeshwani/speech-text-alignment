@@ -23,7 +23,7 @@ dependencies = { file = ["requirements.txt"] }
 readme = { file = ["README.md"] }
 
 [project.optional-dependencies]
-dev = ["black==24.4.2", "isort==5.13.2", "pre-commit==3.7.0"]
+dev = ["black==24.4.2", "isort==5.13.2", "pipreqs==0.5.0", "pre-commit==3.7.0"]
 
 [tool.black]
 line-length = 120
