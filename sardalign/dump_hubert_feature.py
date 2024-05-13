@@ -25,7 +25,7 @@ logger = logging.getLogger("dump_hubert_feature")
 
 
 class HubertFeatureReader(object):
-    def __init__(self, ckpt_path, layer, max_chunk=1600000):
+    def __init__(self, ckpt_path, layer, max_chunk=1_600_000):
         (
             model,
             cfg,

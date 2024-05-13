@@ -47,7 +47,9 @@ time ./resample_audio_files_ffmpeg_parallel.sh
 |16    |0m52.070s|8m16.316s|6m6.157s |
 |2     |6m25.868s|8m25.961s|5m28.323s|
 
-## LJSpeech: Convert Metadata CSV to JSONL
+## LJSpeech Scripts
+
+### Convert Metadata CSV to JSONL - LJSpeech
 
 Converts the [LJSpeech dataset](https://keithito.com/LJ-Speech-Dataset/) metadata file from pipe-separated CSV to JSON Lines format retaining all fields:
 
@@ -65,3 +67,11 @@ Usage:
     --add-lang-code
 ```
 
+### Create Fairseq-style HuBERT metadata.tsv - LJSpeech
+
+```bash
+./jsonl_to_hubert_tsv.py \
+    --in-jsonl-path /mnt/scratch-artemis/anilkeshwani/data/LJSpeech-1.1/metadata.jsonl \
+    --out-tsv-path /mnt/scratch-artemis/anilkeshwani/data/LJSpeech-1.1/test/metadata.tsv \
+    --ljspeech-wavs-dir /media/scratch/anilkeshwani/data/LJSpeech-1.1/wavs_16000
+```
