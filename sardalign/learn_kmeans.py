@@ -8,10 +8,10 @@ import os
 import sys
 from pathlib import Path
 
+import joblib
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 
-import joblib
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -60,25 +60,15 @@ def load_feature_shard(feat_dir, split, nshard, rank, percent):
         nsample = int(np.ceil(len(lengs) * percent))
         indices = np.random.choice(len(lengs), nsample, replace=False)
         feat = np.load(feat_path, mmap_mode="r")
-        sampled_feat = np.concatenate(
-            [feat[offsets[i]: offsets[i] + lengs[i]] for i in indices], axis=0
-        )
-        logger.info(
-            (
-                f"sampled {nsample} utterances, {len(sampled_feat)} frames "
-                f"from shard {rank}/{nshard}"
-            )
-        )
+        sampled_feat = np.concatenate([feat[offsets[i] : offsets[i] + lengs[i]] for i in indices], axis=0)
+        logger.info((f"sampled {nsample} utterances, {len(sampled_feat)} frames " f"from shard {rank}/{nshard}"))
         return sampled_feat
 
 
 def load_feature(feat_dir, split, nshard, seed, percent):
     assert percent <= 1.0
     feat = np.concatenate(
-        [
-            load_feature_shard(feat_dir, split, nshard, r, percent)
-            for r in range(nshard)
-        ],
+        [load_feature_shard(feat_dir, split, nshard, r, percent) for r in range(nshard)],
         axis=0,
     )
     logging.info(f"loaded feature with dimension {feat.shape}")
@@ -132,9 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("km_path", type=str)
     parser.add_argument("n_clusters", type=int)
     parser.add_argument("--seed", default=0, type=int)
-    parser.add_argument(
-        "--percent", default=-1, type=float, help="sample a subset; -1 for all"
-    )
+    parser.add_argument("--percent", default=-1, type=float, help="sample a subset; -1 for all")
     parser.add_argument("--init", default="k-means++")
     parser.add_argument("--max_iter", default=100, type=int)
     parser.add_argument("--batch_size", default=10000, type=int)
