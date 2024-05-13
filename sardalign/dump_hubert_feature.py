@@ -26,11 +26,7 @@ logger = logging.getLogger("dump_hubert_feature")
 
 class HubertFeatureReader(object):
     def __init__(self, ckpt_path, layer, max_chunk=1_600_000):
-        (
-            model,
-            cfg,
-            task,
-        ) = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
+        (model, cfg, task) = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
         self.model = model[0].eval().cuda()
         self.task = task
         self.layer = layer
