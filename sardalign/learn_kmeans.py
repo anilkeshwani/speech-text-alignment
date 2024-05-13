@@ -119,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("feat_dir", type=str)
     parser.add_argument("split", type=str)
     parser.add_argument("nshard", type=int)
-    parser.add_argument("km_path", type=str)
+    parser.add_argument("km_path", type=Path)
     parser.add_argument("n_clusters", type=int)
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--percent", default=-1, type=float, help="sample a subset; -1 for all")
