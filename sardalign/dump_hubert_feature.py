@@ -47,6 +47,8 @@ class HubertFeatureReader(object):
         x = self.read_audio(path, ref_len=ref_len)
         with torch.no_grad():
             x = torch.from_numpy(x).float().cuda()
+            # NOTE for pre-trained HuBERT (large; embed_dim = 1_024) cfg.normalize is True; and
+            # NOTE self.task is a fairseq.tasks.hubert_pretraining.HubertPretrainingTask instance
             if self.task.cfg.normalize:
                 x = F.layer_norm(x, x.shape)
             x = x.view(1, -1)
