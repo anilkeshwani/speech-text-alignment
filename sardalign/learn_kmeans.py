@@ -6,6 +6,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
@@ -88,7 +89,7 @@ def learn_kmeans(
     feat_dir,
     split,
     nshard,
-    km_path,
+    km_path: Path,
     n_clusters,
     seed,
     percent,
@@ -100,6 +101,7 @@ def learn_kmeans(
     reassignment_ratio,
     max_no_improvement,
 ):
+    km_path.parent.mkdir(parents=True, exist_ok=True)
     np.random.seed(seed)
     feat = load_feature(feat_dir, split, nshard, seed, percent)
     km_model = get_km_model(
