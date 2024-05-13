@@ -2,7 +2,7 @@
 
 dump_hubert_feature_py_executable="${HOME}/speech-text-alignment/sardalign/dump_hubert_feature.py"
 tsv_dir='/media/scratch/anilkeshwani/data/LJSpeech-1.1/test'
-split='sample'
+split='metadata'
 ckpt_path='/media/scratch/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt'
 layer='6'
 nshard='1'
