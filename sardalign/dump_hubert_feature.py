@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("nshard", type=int)
     parser.add_argument("rank", type=int)
     parser.add_argument("feat_dir")
-    parser.add_argument("--max_chunk", type=int, default=1600000)
+    parser.add_argument("--max_chunk", type=int, default=1_600_000)
     args = parser.parse_args()
     logger.info(args)
 
