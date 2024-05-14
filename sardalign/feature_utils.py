@@ -11,6 +11,10 @@ from pathlib import Path
 import tqdm
 from npy_append_array import NpyAppendArray
 from sardalign.utils import mls_id_to_path, read_jsonl
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from sardalign.dump_hubert_feature import HubertFeatureReader
 
 
 logging.basicConfig(
@@ -47,7 +51,9 @@ def get_path_iterator(tsv, nshard: int, rank: int):
     return iterate, len(lines)
 
 
-def get_mls_path_iterator(jsonl: Path, audio_dir: Path, nshard: int, rank: int, suffix: str = ".flac"):
+def get_mls_path_iterator(
+    jsonl: Path, audio_dir: Path, nshard: int, rank: int, suffix: str = ".flac"
+) -> tuple[Callable, int]:
     lines: list[dict] = read_jsonl(jsonl)
     start, end = get_shard_range(len(lines), nshard, rank)
     lines = lines[start:end]
@@ -62,15 +68,18 @@ def get_mls_path_iterator(jsonl: Path, audio_dir: Path, nshard: int, rank: int, 
     return iterate, len(lines)
 
 
-def dump_feature(reader, generator, num, split, nshard, rank, feat_dir):
+def dump_feature(
+    reader: HubertFeatureReader, generator: Callable, num: int, split: str | int, nshard: int, rank: int, feat_dir: Path
+):
     iterator = generator()
 
-    feat_path = f"{feat_dir}/{split}_{rank}_{nshard}.npy"
-    leng_path = f"{feat_dir}/{split}_{rank}_{nshard}.len"
+    feat_path = feat_dir / f"{split!s}_{rank}_{nshard}.npy"
+    leng_path = feat_dir / f"{split!s}_{rank}_{nshard}.len"
 
-    os.makedirs(feat_dir, exist_ok=True)
-    if os.path.exists(feat_path):
-        os.remove(feat_path)
+    feat_dir.mkdir(exist_ok=True)
+
+    if feat_path.exists():
+        raise FileExistsError(f"Existing features NumPy array at {feat_path!s}")
 
     feat_f = NpyAppendArray(feat_path)
     with open(leng_path, "w") as leng_f:
