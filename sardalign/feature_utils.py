@@ -10,7 +10,7 @@ from pathlib import Path
 
 import tqdm
 from npy_append_array import NpyAppendArray
-from sardalign.utils import mls_id_to_path
+from sardalign.utils import mls_id_to_path, read_jsonl
 
 
 logging.basicConfig(
@@ -48,7 +48,7 @@ def get_path_iterator(tsv, nshard: int, rank: int):
 
 
 def get_mls_path_iterator(jsonl: Path, audio_dir: Path, nshard: int, rank: int, suffix: str = ".flac"):
-    lines: list[dict] = jsonl.read_text().splitlines()  # type: ignore
+    lines: list[dict] = read_jsonl(jsonl)
     start, end = get_shard_range(len(lines), nshard, rank)
     lines = lines[start:end]
 
