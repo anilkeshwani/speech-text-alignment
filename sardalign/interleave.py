@@ -3,6 +3,7 @@
 import json
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from weakref import ref
 
 import sox
 import torch
@@ -11,6 +12,8 @@ from sardalign.align_and_segment import get_alignments
 from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict
 from sardalign.constants import STAR_TOKEN
 from sardalign.text_normalization import text_normalize
+from sardalign.dump_hubert_feature import HubertFeatureReader
+from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from tqdm import tqdm
 
@@ -36,6 +39,15 @@ def parse_args() -> Namespace:
     )
     parser.add_argument("--device", type=str, default=None, help="Device for ")
     parser.add_argument("--sample", type=int, default=None, help="Use a sample of the dataset for testing purposes")
+
+    # HuBERT Feature Reader arguments
+    parser.add_argument("--ckpt-path", type=str, required=True, help="Path to pre-trained HuBERT checkpoint")
+    parser.add_argument("--layer", type=int, required=True, help="BERT layer whose embeddings to use as features")
+    parser.add_argument("--max-chunk", type=int, default=1_600_000, help="Maximum audio chunk length in samples")
+
+    # K-means Model arguments
+    parser.add_argument("--km-path", type=Path, required=True, help="Path to joblib serialised k-means model")
+
     args = parser.parse_args()
     if args.uroman_path is None:
         args.uroman_path = Path(__file__).parents[1] / "submodules" / "uroman" / "bin"
@@ -66,6 +78,9 @@ def main(args):
 
     model, dictionary = load_model_dict()
     model = model.to(device)
+
+    hubert_feature_reader = HubertFeatureReader(args.ckpt_path, args.layer, args.max_chunk)
+    apply_k_means = ApplyKmeans(args.km_path)
 
     if args.use_star:
         dictionary[STAR_TOKEN] = len(dictionary)
@@ -103,6 +118,10 @@ def main(args):
                 tfm.trim(audio_start_sec, audio_end_sec)
                 tfm.build_file(audio_path, output_file)
 
+                hubert_features = hubert_feature_reader.get_feats(output_file, ref_len=None)
+                hubert_features.cpu().numpy()
+                hubert_tokens = apply_k_means(hubert_features).tolist()
+
                 sample = {
                     "audio_start_sec": audio_start_sec,
                     "audio_filepath": str(output_file),
@@ -110,6 +129,7 @@ def main(args):
                     "text": t,
                     "normalized_text": norm_transcripts[i],
                     "uroman_tokens": tokens[i],
+                    "hubert_tokens": hubert_tokens,
                 }
                 f.write(json.dumps(sample) + "\n")
 

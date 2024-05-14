@@ -15,6 +15,10 @@ from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from sardalign.dump_hubert_feature import HubertFeatureReader
+else:
+    from typing import Any
+
+    HubertFeatureReader = Any
 
 
 logging.basicConfig(
