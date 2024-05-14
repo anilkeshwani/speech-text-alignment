@@ -9,8 +9,6 @@ LANG='eng'
 OUTPUT_DIR="${PROJECT_ROOT_DIR}/tests/output/segment_tokens/"
 UROMAN_BINARY="${PROJECT_ROOT_DIR}/submodules/uroman/bin"
 
-rm -rf /home/anilkeshwani/speech-text-alignment/tests/output/segment_tokens
-
 (
     cd "$SARDALIGN_DIR"
     python ./segment_tokens.py \

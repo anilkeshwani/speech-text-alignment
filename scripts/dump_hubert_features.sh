@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 HAFH='/mnt/scratch-artemis/anilkeshwani' # your "${HOME}" away from "${HOME}"
 
 dump_hubert_feature_py_executable="${HAFH}/speech-text-alignment/sardalign/dump_hubert_feature.py"
