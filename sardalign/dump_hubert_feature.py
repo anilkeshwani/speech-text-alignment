@@ -6,13 +6,13 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import fairseq
 import torch
 import torch.nn.functional as F
 from fairseq.data.audio.audio_utils import get_features_or_waveform
-
-from sardalign.feature_utils import dump_feature, get_path_iterator
+from sardalign.feature_utils import dump_feature, get_mls_path_iterator
 
 
 logging.basicConfig(
@@ -21,7 +21,7 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO").upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger("dump_hubert_feature")
+logger = logging.getLogger(__name__)
 
 
 class HubertFeatureReader(object):
@@ -66,9 +66,20 @@ class HubertFeatureReader(object):
         return torch.cat(feat, 1).squeeze(0)
 
 
-def main(tsv_dir, split, ckpt_path, layer, nshard, rank, feat_dir, max_chunk):
+def main(
+    jsonl: Path,
+    audio_dir: Path,
+    ckpt_path: Path,
+    layer: int,
+    nshard: int,
+    rank: int,
+    feat_dir: Path,
+    max_chunk: int,
+    suffix: str,
+):
+    split = jsonl.stem
     reader = HubertFeatureReader(ckpt_path, layer, max_chunk)
-    generator, num = get_path_iterator(f"{tsv_dir}/{split}.tsv", nshard, rank)
+    generator, num = get_mls_path_iterator(jsonl, audio_dir=audio_dir, nshard=nshard, rank=rank, suffix=suffix)
     dump_feature(reader, generator, num, split, nshard, rank, feat_dir)
 
 

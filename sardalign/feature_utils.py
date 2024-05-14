@@ -6,9 +6,11 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import tqdm
 from npy_append_array import NpyAppendArray
+from sardalign.utils import mls_id_to_path
 
 
 logging.basicConfig(
@@ -20,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger("feature_utils")
 
 
-def get_shard_range(tot, nshard, rank):
+def get_shard_range(tot: int, nshard: int, rank: int) -> tuple[int, int]:
     assert rank < nshard and rank >= 0, f"invaid rank/nshard {rank}/{nshard}"
     start = round(tot / nshard * rank)
     end = round(tot / nshard * (rank + 1))
@@ -29,7 +31,7 @@ def get_shard_range(tot, nshard, rank):
     return start, end
 
 
-def get_path_iterator(tsv, nshard, rank):
+def get_path_iterator(tsv, nshard: int, rank: int):
     with open(tsv, "r") as f:
         root = f.readline().rstrip()
         lines = [line.rstrip() for line in f]
@@ -41,6 +43,21 @@ def get_path_iterator(tsv, nshard, rank):
                 _ = line.split("\t")
                 subpath, nsample = (*_, None) if len(_) == 1 else _
                 yield f"{root}/{subpath}", int(nsample) if nsample is not None else nsample
+
+    return iterate, len(lines)
+
+
+def get_mls_path_iterator(jsonl: Path, audio_dir: Path, nshard: int, rank: int, suffix: str = ".flac"):
+    lines: list[dict] = jsonl.read_text().splitlines()  # type: ignore
+    start, end = get_shard_range(len(lines), nshard, rank)
+    lines = lines[start:end]
+
+    def iterate():
+        for line in lines:
+            audio_path = mls_id_to_path(line["ID"], audio_dir, suffix)
+            n_samples = line.get("n_samples")
+            n_samples = int(n_samples) if n_samples is not None else n_samples
+            yield audio_path, n_samples
 
     return iterate, len(lines)
 
