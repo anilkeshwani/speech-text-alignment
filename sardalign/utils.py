@@ -31,8 +31,8 @@ def get_device(device: str | None = None) -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else local_device)
 
 
-def ljspeech_id_to_path(lj_id: str, wavs_dir: Path, suffix: str = ".wav") -> Path:
-    return (wavs_dir / lj_id).with_suffix(suffix)
+def ljspeech_id_to_path(lj_id: str, audio_dir: Path, suffix: str = ".wav") -> Path:
+    return (audio_dir / lj_id).with_suffix(suffix)
 
 
 def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:

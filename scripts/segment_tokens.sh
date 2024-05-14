@@ -2,20 +2,17 @@
 
 set -euo pipefail
 
-PROJECT_ROOT_DIR="${SPEECH_TEXT_ALIGN_ROOT_DIR:-${HOME}/speech-text-alignment}"
-SARDALIGN_DIR="${PROJECT_ROOT_DIR}/sardalign"
-JSONL_PATH="/media/scratch/anilkeshwani/data/LJSpeech-1.1/metadata.jsonl"
-LANG='eng'
-OUTPUT_DIR="${PROJECT_ROOT_DIR}/tests/output/segment_tokens/"
-UROMAN_BINARY="${PROJECT_ROOT_DIR}/submodules/uroman/bin"
+HAFH='/mnt/scratch-artemis/anilkeshwani' # your "${HOME}" away from "${HOME}"
 
-(
-    cd "$SARDALIGN_DIR"
-    python ./segment_tokens.py \
-        --jsonl "$JSONL_PATH" \
-        --lang "$LANG" \
-        --outdir "$OUTPUT_DIR" \
-        --uroman "$UROMAN_BINARY" \
-        --transcript-stem-suffix \
-        --sample 10
-)
+segment_tokens_py_executable="${HAFH}/speech-text-alignment/sardalign/segment_tokens.py"
+jsonl="${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl"
+audio_dir="${HAFH}/data/MLS/mls_english/dev/audio"
+lang='eng'
+output_dir="${HAFH}/tmp/MLS/mls_english/dev/audio_segmented"
+
+python "${segment_tokens_py_executable}" \
+    --jsonl "$jsonl" \
+    --audio-dir "$audio_dir" \
+    --out-dir "$output_dir" \
+    --lang "$lang" \
+    --sample 10
