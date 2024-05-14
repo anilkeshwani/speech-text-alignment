@@ -75,3 +75,18 @@ Usage:
     --out-tsv-path /mnt/scratch-artemis/anilkeshwani/data/LJSpeech-1.1/test/metadata.tsv \
     --ljspeech-wavs-dir /media/scratch/anilkeshwani/data/LJSpeech-1.1/wavs_16000
 ```
+
+## MLS Scripts
+
+### Convert transcripts.txt to JSON lines 
+
+See `./scripts/mls/transcripts_to_jsonl.py --help`.
+
+Example usage:
+
+```bash
+./scripts/mls/transcripts_to_jsonl.py \
+    --audio-dir "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/audio/" \
+    --transcripts "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts.txt" \
+    --output-jsonl "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts.jsonl"
+```

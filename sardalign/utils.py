@@ -33,3 +33,18 @@ def get_device(device: str | None = None) -> torch.device:
 
 def ljspeech_id_to_path(lj_id: str, wavs_dir: Path, suffix: str = ".wav") -> Path:
     return (wavs_dir / lj_id).with_suffix(suffix)
+
+
+def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:
+    """_summary_
+
+    Args:
+        mls_id (str): ID as found in transcripts.txt file e.g. 10214_10108_000000
+        audio_dir (Path): Should be "audio" directory e.g. /path/to/mls_english/dev/audio
+        suffix (str, optional): File extension. Defaults to ".flac".
+
+    Returns:
+        Path: Resolved path pointing to audio file
+    """
+    subdir1, subdir2, file_specifier = mls_id.removesuffix(suffix).split("_")
+    return (audio_dir / subdir1 / subdir2 / mls_id).with_suffix(suffix)
