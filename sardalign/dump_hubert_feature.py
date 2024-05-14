@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from pprint import pformat
 
 import fairseq
 import torch
@@ -99,6 +100,6 @@ if __name__ == "__main__":
     parser.add_argument("--max-chunk", type=int, default=1_600_000, help="Maximum audio chunk length in samples")
     parser.add_argument("--suffix", type=str, default=".flac", help="File extension for audio files")
     args = parser.parse_args()
-    logger.info(args)
+    logger.info(pformat(vars(args), sort_dicts=False))
 
     main(**vars(args))
