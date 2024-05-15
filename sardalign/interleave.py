@@ -3,7 +3,6 @@
 import json
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from weakref import ref
 
 import sox
 import torch
