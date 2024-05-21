@@ -2,6 +2,8 @@
 
 Scripts to align speech audio with their text transcriptions in time. 
 
+In addition to this README, more granular [documentation can be found in docs/](/docs/).
+
 ## Setup
 
 ### Clone Repository
@@ -167,4 +169,3 @@ real    2m37.302s
 user    2m21.711s
 sys     0m17.245s
 ```
-
