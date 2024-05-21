@@ -143,8 +143,8 @@ Usage:
 
 ```bash
 ./scripts/mls/transcripts_to_jsonl.py \
-    --audio-dir "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/audio/" \
-    --transcripts "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts.txt" \
+    --audio-dir "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/audio/" \
+    --transcripts "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts.txt" \
     --head 20000
 ```
 
