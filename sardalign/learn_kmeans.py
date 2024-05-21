@@ -12,6 +12,7 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+from sardalign.constants import SEED
 from sklearn.cluster import MiniBatchKMeans
 
 
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument("nshard", type=int)
     parser.add_argument("km_path", type=Path)
     parser.add_argument("n_clusters", type=int)
-    parser.add_argument("--seed", default=0, type=int)
+    parser.add_argument("--seed", default=SEED, type=int)
     parser.add_argument("--percent", default=-1, type=float, help="sample a subset; -1 for all")
     parser.add_argument("--init", default="k-means++")
     parser.add_argument("--max_iter", default=100, type=int)

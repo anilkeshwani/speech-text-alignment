@@ -1,3 +1,4 @@
 SAMPLING_FREQ: int = 16_000
 EMISSION_INTERVAL: int = 30
 STAR_TOKEN: str = "<star>"
+SEED: int = 42831
