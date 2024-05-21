@@ -64,6 +64,26 @@ python segment_tokens.py \
     --sample 10
 ```
 
+## To Implement
+
+- Support for k-means clustering via [FAISS clustering](https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization) - Motivation: speed. Not a priority if the k-means clustering is a bottlenecked due to computational speed
+
+## Benchmarking
+
+### Dump HuBERT Features
+
+Dumping HuBERT features for the _dev_ set of English MLS _as is_ (15.75 hrs; split into 3,807 audio files) took ~2:40 on a single GPU on Artemis (NVIDIA RTX A6000; 48GB VRAM) with utilisation well under 100%.
+
+Output of `time ./tests/dump_hubert_features.sh` as of [ec1ccd22c41ba776bbcb76f5cb339a371e48fdce](https://github.com/anilkeshwani/speech-text-alignment/tree/ec1ccd22c41ba776bbcb76f5cb339a371e48fdce).
+
+```
+real    2m37.302s
+user    2m21.711s
+sys     0m17.245s
+```
+
+---
+
 ## Dev Containers - `TODO`
 
 We provide a _devcontainer.json_ to allow for development inside a containerised environment via VSCode. This enables installation of Linux binary dependencies such as [FFmpeg](https://ffmpeg.org/) or [SoX](https://en.wikipedia.org/wiki/SoX) via `apt` without requiring sudo permissions on the host machine. 
