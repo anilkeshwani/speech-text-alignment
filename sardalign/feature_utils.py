@@ -7,11 +7,12 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Callable, TYPE_CHECKING
 
 import tqdm
 from npy_append_array import NpyAppendArray
 from sardalign.utils import mls_id_to_path, read_jsonl
-from typing import TYPE_CHECKING, Callable
+
 
 if TYPE_CHECKING:
     from sardalign.dump_hubert_feature import HubertFeatureReader
