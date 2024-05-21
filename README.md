@@ -139,18 +139,16 @@ Usage:
 
 ### MLS Scripts
 
-#### Convert transcripts.txt to JSON lines 
-
-See `./scripts/mls/transcripts_to_jsonl.py --help`.
-
-Example usage:
+#### Convert transcripts.txt to JSON lines - MLS
 
 ```bash
 ./scripts/mls/transcripts_to_jsonl.py \
     --audio-dir "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/audio/" \
     --transcripts "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts.txt" \
-    --output-jsonl "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts.jsonl"
+    --head 20000
 ```
+
+Can optionally pass a `--output-jsonl` to specify where the output will be saved. If not explicitly passed, the JSON lines will be the the same as the txt file with a the suffix amended; additionally with the file name amended to reflect if the `--head` was taken. 
 
 ## To Implement
 
