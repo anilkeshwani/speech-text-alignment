@@ -52,12 +52,15 @@ conda create -n sardalign python=3.10.6 -y &&
 Example call:
 
 ```bash
-python ./sardalign/segment_tokens.py \
-    --jsonl "/media/scratch/anilkeshwani/data/LJSpeech-1.1/metadata.jsonl" \
-    --lang "eng" \
-    --outdir "/tmp/segment_tokens_output/" \
-    --uroman "./submodules/uroman/bin" \
-    --transcript-stem-suffix \
+HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
+
+cd "${HAFH}/speech-text-alignment/sardalign" # enter the package directory
+
+python segment_tokens.py \
+    --jsonl "${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl" \
+    --audio-dir "${HAFH}/data/MLS/mls_english/dev/audio" \
+    --out-dir "${HAFH}/tmp/MLS/mls_english/dev/audio_segmented" \
+    --lang 'eng' \
     --sample 10
 ```
 
