@@ -150,6 +150,14 @@ Usage:
 
 Can optionally pass a `--output-jsonl` to specify where the output will be saved. If not explicitly passed, the JSON lines will be the the same as the txt file with a the suffix amended; additionally with the file name amended to reflect if the `--head` was taken. 
 
+#### Stratified Sample of Transcripts JSON Lines - MLS
+
+```bash
+./scripts/mls/stratified_sample.py \
+    --transcripts-jsonl /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts.jsonl \
+    --sample 0.25
+```
+
 ## To Implement
 
 - Support for k-means clustering via [FAISS clustering](https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization) - Motivation: speed. Not a priority if the k-means clustering is a bottlenecked due to computational speed. See also [_Implementing K-Means clustering with FAISS_](https://www.kdnuggets.com/2021/01/k-means-faster-lower-error-scikit-learn.html) and [FAISS k-means snippet](/snippets/faiss_kmeans.py).
