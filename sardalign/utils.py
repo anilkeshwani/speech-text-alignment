@@ -40,7 +40,7 @@ def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:
 
     Args:
         mls_id (str): ID as found in transcripts.txt file e.g. 10214_10108_000000
-        audio_dir (Path): Should be "audio" directory e.g. /path/to/mls_english/dev/audio
+        audio_dir (Path): A relative or absolute "audio" directory e.g. mls_english/dev/audio
         suffix (str, optional): File extension. Defaults to ".flac".
 
     Returns:
