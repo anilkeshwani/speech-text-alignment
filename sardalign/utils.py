@@ -46,5 +46,5 @@ def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:
     Returns:
         Path: Resolved path pointing to audio file
     """
-    subdir1, subdir2, file_specifier = mls_id.removesuffix(suffix).split("_")
-    return (audio_dir / subdir1 / subdir2 / mls_id).with_suffix(suffix)
+    speaker_id, book_id, file_specifier = mls_id.removesuffix(suffix).split("_")
+    return (audio_dir / speaker_id / book_id / mls_id).with_suffix(suffix)
