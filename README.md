@@ -17,25 +17,18 @@ git clone git@github.com:anilkeshwani/speech-text-alignment.git &&
 Ensure the necessary binary requirements are installed:
 
 ```bash
-apt install sox
+apt install sox ffmpeg
 ```
 
-<details>
-  <summary>Instal binaries on OSX with Homebrew</summary>
-  
-  ```bash
-  brew install ffmpeg sox
-  ```
-
-</details>
-
-> Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.10.6.
+Install the package and with it all dependencies including useful dependencies for development; specified via "dev" option to `pip install`.
 
 ```bash
 conda create -n sardalign python=3.10.6 -y &&
     conda activate sardalign &&
     pip install -e .["dev"]
 ```
+
+> Note: We do not install the _dataclasses_ library as per the [fairseq MMS README](https://github.com/facebookresearch/fairseq/blob/bedb259bf34a9fc22073c13a1cee23192fa70ef3/examples/mms/data_prep/README.md) it ships out of the box with Python 3.10.6.
 
 <details>
   <summary>Note: When running on Artemis / Poseidon, ensure support for CUDA is provided.</summary>
