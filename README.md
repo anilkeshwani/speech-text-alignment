@@ -184,6 +184,23 @@ Since the archive is 2.4TB, a manifest of files contained can be obtained via:
 tar --list -f mls_english.tar.gz > archive_list.txt
 ```
 
+Audio files (flacs) in MLS are organised into subdirectories for 
+1. language
+2. split
+3. (audio)
+4. speaker ID
+5. book ID 
+
+in the above order. 
+
+Audio filenames are of the format `f"{speaker_id}_{book_id}_audio_id.flac"`.
+
+For example:
+
+```
+mls_english/dev/audio/1982/1551/1982_1551_000037.flac
+```
+
 This results in a file containing 5,524,525 lines - this includes entries for directories. 
 
 ```bash
