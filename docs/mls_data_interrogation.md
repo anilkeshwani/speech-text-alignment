@@ -8,7 +8,7 @@ The English subset is available as the original _flac_ audio files (2.4TB) or co
 wget https://dl.fbaipublicfiles.com/mls/mls_english.tar.gz # takes ~30 hours at ~25MB/s download speed
 ```
 
-Since the archive is 2.4TB, a manifest of files contained can be obtained via the following command, which takes 3+ hours to complete:
+Since the archive is 2.4TB, a manifest of files contained can be obtained via the following command, which takes ~5:10 to complete:
 
 ```bash
 tar --list -f mls_english.tar.gz > archive_list.txt # run inside a tmux session; takes 3+ hours to complete
