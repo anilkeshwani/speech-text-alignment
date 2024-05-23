@@ -5,7 +5,8 @@ import os
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
-from pprint import pprint
+from pprint import pformat, pprint
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -53,35 +54,37 @@ def get_stratified_sample(
     N = len(data)
     if isinstance(sample_size, float):
         sample_size = int(sample_size * N)
+    if sample_size >= N:
+        raise ValueError("Sample size should be less than number of samples")
+    print(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
     criterion = data[strata_label]
     strata, s_invs, s_cnts = np.unique(criterion, return_inverse=True, return_counts=True)
     n_strata = len(strata)
-    desired_samples_per_stratum, remainder = divmod(N, n_strata)
-    if verbose:
-        print(f"Number of strata: {n_strata}")
-    _cnts_idxs_desc = np.argsort(s_cnts)[::-1]
-    speaker_distribution = {s: c for s, c in zip(strata[_cnts_idxs_desc], s_cnts[_cnts_idxs_desc])}
-    pprint(speaker_distribution, sort_dicts=False, indent=4)
-    s_idxs = np.argsort(s_invs, kind="stable")
-    strat_subsets_idxs: list[NDArray] = np.split(s_idxs, np.cumsum(s_cnts)[:-1])
-    assert sum(len(ss) for ss in strat_subsets_idxs) == N
+    print(f"Number of strata: {n_strata}")
+    idxs_cnts_desc = np.argsort(s_cnts)[::-1]
+    speaker_distribution_desc = {s: c for s, c in zip(strata[idxs_cnts_desc], s_cnts[idxs_cnts_desc])}
+    print(f"Speaker distribution (descending):\n{pformat(speaker_distribution_desc, sort_dicts=False)}")
+    s_idxs = np.argsort(s_invs, kind="stable")  # stable so the head of a stratum corresponds to samples' original order
+    ss_idxs: list[NDArray] = np.split(s_idxs, np.cumsum(s_cnts)[:-1])
     if shuffle:
-        [prng.shuffle(ss) for ss in strat_subsets_idxs]  # in-place
-
-    n_samples_ss_diffs = [len(ss) - desired_samples_per_stratum for ss in strat_subsets_idxs]
-    _ = {stratum: diff for stratum, diff in zip(strata, n_samples_ss_diffs)}
+        [prng.shuffle(ss) for ss in ss_idxs]  # in-place
+    assert sum(len(ss) for ss in ss_idxs) == N
+    assert all(len(ss_idx) == s_cnt for ss_idx, s_cnt in zip(ss_idxs, s_cnts))
+    ss_idxs_selected: dict[Any, NDArray] = {}
+    ss_idxs_asc = [ss_idxs[i] for i in idxs_cnts_desc[::-1]]
+    samples_to_take = sample_size
+    for i, (stratum, ss_idx) in enumerate(zip(reversed(speaker_distribution_desc), ss_idxs_asc)):
+        desired_samples_stratum = samples_to_take // (n_strata - i)
+        ss_idxs_selected[stratum] = ss_idx[:desired_samples_stratum]
+        samples_to_take -= len(ss_idxs_selected[stratum])
+    _ = {s: len(idxs) for s, idxs in ss_idxs_selected.items()}
+    _ = {s: _[s] for s in speaker_distribution_desc}
     pprint(_)
-
-    # bank: int = 0
-    # for ss in strat_subsets_idxs:
-    #     if remainder and len(ss) >= (desired_samples_per_stratum + 1):
-    #         ss_out = ss[: (desired_samples_per_stratum + 1)]
-    #         remainder -= 1
-    #     elif remainder and len(ss) < (desired_samples_per_stratum + 1):
-    #         ss_out = ss[:desired_samples_per_stratum]
-    #         bank += 1
-    #     else:
-    #         ss_out = ss[:desired_samples_per_stratum]
+    n_total_samples_taken = sum(len(_) for _ in ss_idxs_selected.values())
+    assert n_total_samples_taken == sample_size, f"{n_total_samples_taken} samples taken, {sample_size} requested"
+    exit()
+    ss_idxs_selected = np.concatenate(ss_idxs_selected.values())
+    return data.loc[ss_idxs_selected]
 
 
 def main(args):
