@@ -77,13 +77,8 @@ def get_stratified_sample(
         desired_samples_stratum = samples_to_take // (n_strata - i)
         ss_idxs_selected[stratum] = ss_idx[:desired_samples_stratum]
         samples_to_take -= len(ss_idxs_selected[stratum])
-    _ = {s: len(idxs) for s, idxs in ss_idxs_selected.items()}
-    _ = {s: _[s] for s in speaker_distribution_desc}
-    pprint(_)
-    n_total_samples_taken = sum(len(_) for _ in ss_idxs_selected.values())
-    assert n_total_samples_taken == sample_size, f"{n_total_samples_taken} samples taken, {sample_size} requested"
-    exit()
-    ss_idxs_selected = np.concatenate(ss_idxs_selected.values())
+    assert sum(len(_) for _ in ss_idxs_selected.values()) == sample_size
+    ss_idxs_selected = np.concatenate(list(ss_idxs_selected.values()))
     return data.loc[ss_idxs_selected]
 
 
@@ -94,16 +89,16 @@ def main(args):
     transcripts = pd.read_json(args.transcripts_jsonl, lines=True, orient="records", dtype={"ID": str})
     # Create a new speaker column by extracting the number before the first underscore from the "ID" column
     transcripts["speaker"] = transcripts["ID"].str.split("_").str[0].astype(int)
-    # get_stratified_sample(transcripts, args.sample, "speaker", args.shuffle, )
-    get_stratified_sample(
-        transcripts, args.sample, strata_label="speaker", shuffle=args.shuffle, verbose=args.verbose, seed=args.seed
+    stratified_sample = get_stratified_sample(
+        transcripts,
+        args.sample,
+        strata_label="speaker",
+        shuffle=args.shuffle,
+        verbose=args.verbose,
+        seed=args.seed,
     )
-    exit()
-    train, _ = train_test_split(transcripts, train_size=args.sample, stratify=transcripts["speaker"], random_state=SEED)
-    train: pd.DataFrame
-    train.drop(columns="speaker", inplace=True)
-    camios.drop(columns="speaker", inplace=True)
-    stratified_sample = pd.concat([ss, camios], axis="index")
+    stratified_sample.drop(columns="speaker", inplace=True)
+    print(stratified_sample.head())
     with open(args.output_jsonl, "x") as f:
         f.write(stratified_sample.to_json(orient="records", lines=True, force_ascii=args.force_ascii))
     logger.info(f"Wrote {len(stratified_sample)} lines to {args.output_jsonl!s}")
