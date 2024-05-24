@@ -8,11 +8,10 @@ import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
-
-from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device
+from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 
 
 DEVICE = get_device()
@@ -96,25 +95,18 @@ def get_alignments(
 def main(args):
     echo_environment_info(torch, torchaudio, DEVICE)
     assert not os.path.exists(args.outdir), f"Error: Output path exists already {args.outdir}"
-
-    transcripts: list[str] = []
     with open(args.text_filepath) as f:
-        transcripts = [line.strip() for line in f]
-    print("Read {} lines from {}".format(len(transcripts), args.text_filepath))
-
+        transcripts: list[str] = [line.strip() for line in f]
+    print(f"Read {len(transcripts)} lines from {args.text_filepath}")
     norm_transcripts: list[str] = [text_normalize(line.strip(), args.lang) for line in transcripts]
-
     tokens: list[str] = get_uroman_tokens(norm_transcripts, args.uroman_path, args.lang)
-
     model, dictionary = load_model_dict()
-
     model = model.to(DEVICE)
     if args.use_star:
         dictionary["<star>"] = len(dictionary)
         tokens = ["<star>"] + tokens
         transcripts = ["<star>"] + transcripts
         norm_transcripts = ["<star>"] + norm_transcripts
-
     segments, stride = get_alignments(
         args.audio_filepath,
         tokens,
@@ -122,25 +114,19 @@ def main(args):
         dictionary,
         args.use_star,
     )
-    # Get spans of each line in input text file
-    spans = get_spans(tokens, segments)
-
+    spans = get_spans(tokens, segments)  # get spans of each line in input text file
     os.makedirs(args.outdir)
     with open(f"{args.outdir}/manifest.json", "w") as f:
         for i, t in enumerate(transcripts):
             span = spans[i]
             seg_start_idx = span[0].start
             seg_end_idx = span[-1].end
-
             output_file = f"{args.outdir}/segment{i}.flac"
-
             audio_start_sec = seg_start_idx * stride / 1000
             audio_end_sec = seg_end_idx * stride / 1000
-
             tfm = sox.Transformer()
             tfm.trim(audio_start_sec, audio_end_sec)
             tfm.build_file(args.audio_filepath, output_file)
-
             sample = {
                 "audio_start_sec": audio_start_sec,
                 "audio_filepath": str(output_file),
@@ -150,7 +136,6 @@ def main(args):
                 "uroman_tokens": tokens[i],
             }
             f.write(json.dumps(sample) + "\n")
-
     return segments, stride
 
 
