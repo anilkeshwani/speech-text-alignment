@@ -9,7 +9,7 @@ import torch
 import torchaudio
 import torchaudio.functional as F
 
-from sardalign.align_utils import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
+from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device
