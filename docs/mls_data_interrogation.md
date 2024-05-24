@@ -11,7 +11,7 @@ wget https://dl.fbaipublicfiles.com/mls/mls_english.tar.gz # takes ~30 hours at 
 Since the archive is 2.4TB, a manifest of files contained can be obtained via the following command, which takes ~5:10 to complete:
 
 ```bash
-tar --list -f mls_english.tar.gz > archive_list.txt # run inside a tmux session; takes 3+ hours to complete
+tar --list -f mls_english.tar.gz > archive_contents.txt # run inside a tmux session; takes 5+ hours to complete
 ```
 
 Audio files (flacs) in MLS are organised into subdirectories for 
@@ -31,48 +31,62 @@ For example:
 mls_english/dev/audio/1982/1551/1982_1551_000037.flac
 ```
 
-This results in a file containing 5,524,525 lines - this includes entries for directories. 
+This results in a file containing 10,855,734 lines - this includes entries for directories. 
 
 ```bash
-wc archive_list.txt
-#   5524525   5524525 315287688 archive_list.txt
+wc archive_contents.txt #  10855734  10855734 618098858 archive_contents.txt
 ```
 
-We can filter for files, which should result in 5,503,864 (i.e. we drop 20,661 lines)
+We can filter for files, which should reduce the file to 10,815,627 lines.
+
 ```bash
-grep "\." archive_list.txt > archive_list_files.txt
-wc archive_list_files.txt
-#  5503864   5503864 314564409 archive_list_files.txt
+grep "\." archive_contents.txt > archive_contents_files.txt
+wc archive_contents_files.txt # 10815627  10815627 616697973 archive_contents_files.txt
 ```
 
-...and subsequently count the number of files of each type to validate the data:
+Subsequently count the number of files of each type to validate the data:
 
 ```bash
-./scripts/mls/count_file_types.py "/mnt/scratch-artemis/anilkeshwani/data/MLS/archive_list_files.txt"
-# {'flac': 5503857, 'txt': 7}
+./scripts/mls/count_file_types.py "/mnt/scratch-artemis/anilkeshwani/data/MLS/archive_contents_files.txt"
+```
+
+```
+{
+    'flac': 10815613, 
+    'txt': 14
+}
 ```
 
 We can separate out the audio (flac) files:
 
 ```bash
-grep "\.flac" archive_list.txt > archive_list_flac_files.txt
-wc archive_list_flac_files.txt #   5503857   5503857 314564195 archive_list_flac_files.txt
+grep "\.flac" archive_contents.txt > archive_contents_flac_files.txt
+wc archive_contents_flac_files.txt # 10815613  10815613 616697369 archive_contents_flac_files.txt
 ```
 
 We can separate out the text files, which contain metadata and file manifests and unpack these:
 
 ```bash
-grep "\.txt" archive_list.txt > archive_list_text_files.txt
-wc archive_list_text_files.txt # 7   7 214 archive_list_text_files.txt
-tar -xvf mls_english.tar.gz --files-from archive_list_text_files.txt
-# mls_english/metainfo.txt
-# mls_english/dev/transcripts.txt
-# mls_english/dev/segments.txt
-# mls_english/test/segments.txt
-# mls_english/test/transcripts.txt
-# mls_english/train/transcripts.txt
-# mls_english/train/segments.txt
+grep "\.txt" archive_contents.txt > archive_contents_text_files.txt
+wc archive_contents_text_files.txt
+tar -xvf mls_english.tar.gz --files-from archive_contents_text_files.txt
 ```
+
+MLS contains the following text files:
+- mls_english/metainfo.txt
+- mls_english/dev/transcripts.txt
+- mls_english/dev/segments.txt
+- mls_english/test/segments.txt
+- mls_english/test/transcripts.txt
+- mls_english/train/transcripts.txt
+- mls_english/train/segments.txt
+- mls_english/train/limited_supervision/1hr/0/handles.txt
+- mls_english/train/limited_supervision/1hr/1/handles.txt
+- mls_english/train/limited_supervision/1hr/2/handles.txt
+- mls_english/train/limited_supervision/1hr/3/handles.txt
+- mls_english/train/limited_supervision/1hr/4/handles.txt
+- mls_english/train/limited_supervision/1hr/5/handles.txt
+- mls_english/train/limited_supervision/9hr/handles.txt
 
 The metainfo.txt file shows metadata about the whole dataset and specifically the following fields:
 
@@ -136,12 +150,16 @@ Each segments.txt contains:
 4800_10003_000009       http://www.archive.org/download/rose_garden_husband_1508_librivox/rose_garden_husband_14_widdemer_64kb.mp3      240.72  258.77
 ```
 
-We can check that the number of files in e.g. the train split's transcripts file matches the total number in the file list we created with `tar` as follows:
+We can check that the number of audio files matches the total number across transcripts.txt files from the train, dev and test splits:
 
 ```bash
-wc -l mls_english/train/transcripts.txt
-# 10808037
+find . -name "transcripts.txt" | xargs -I{} wc -l {}
 ```
 
-10,808,037
-5,496,281
+```
+3807 ./mls_english/dev/transcripts.txt
+10808037 ./mls_english/train/transcripts.txt
+3769 ./mls_english/test/transcripts.txt
+```
+
+This is a total of 10,815,613 flac files which matches the line count above (`wc archive_contents_flac_files.txt`).
