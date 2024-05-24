@@ -18,16 +18,6 @@ def read_jsonl(jsonl: Path, mode: str = "r", encoding: str = "utf-8") -> list[di
         return [json.loads(line) for line in f]
 
 
-def parse_arg_int_or_float(value: str) -> int | float:
-    try:
-        return int(value)
-    except ValueError:
-        try:
-            return float(value)
-        except ValueError:
-            raise ArgumentTypeError(f"{value} is neither an integer nor a float.")
-
-
 def echo_environment_info(torch, torchaudio, device: torch.device) -> None:
     print("Using torch version:", torch.__version__)
     print("Using torchaudio version:", torchaudio.__version__)
@@ -70,3 +60,21 @@ def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:
     """
     speaker_id, book_id, file_specifier = mls_id.removesuffix(suffix).split("_")
     return (audio_dir / speaker_id / book_id / mls_id).with_suffix(suffix)
+
+
+def get_integer_sample_size(sample_size: int | float, N: int) -> int:
+    if not isinstance(sample_size, (int, float)):
+        raise TypeError(f"sample_size should be one of int or float but got {type(sample_size)}")
+    if isinstance(sample_size, float):
+        sample_size = int(sample_size * N)
+    return sample_size
+
+
+def parse_arg_int_or_float(value: str) -> int | float:
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            raise ArgumentTypeError(f"{value} is neither an integer nor a float.")
