@@ -13,23 +13,27 @@ def get_stratified_sample(
     strata_label: str,
     shuffle: bool,
     verbose: bool,
+    logger: logging.Logger,
     seed: int | None = None,
-    logger: logging.Logger | None = None,
 ) -> tuple[DataFrame, int]:
     prng = np.random.default_rng(seed)
     N = len(data)
     if sample_size >= N:
         raise ValueError("Sample size should be less than number of samples")
-    if verbose and logger is not None:
-        logger.info(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
+    logger.info(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
     criterion = data[strata_label]
     strata, s_invs, s_cnts = np.unique(criterion, return_inverse=True, return_counts=True)
     n_strata = len(strata)
-    if verbose and logger is not None:
-        logger.info(f"Number of strata: {n_strata}")
+    logger.info(f"Number of strata: {n_strata}")
+    if sample_size < n_strata:
+        logger.warning(
+            f"Sample size ({sample_size}) is smaller than number of strata ({n_strata}). "
+            "The current implementation deterministically takes the least populated strata even when passing --shuffle"
+            ", which selects samples from within each stratum randomly and does not randomise the selected strata."
+        )
     idxs_cnts_desc = np.argsort(s_cnts)[::-1]
     speaker_distribution_desc = {s: c for s, c in zip(strata[idxs_cnts_desc], s_cnts[idxs_cnts_desc])}
-    if verbose and logger is not None:
+    if verbose:
         logger.info(f"Speaker distribution (descending):\n{pformat(speaker_distribution_desc, sort_dicts=False)}")
     s_idxs = np.argsort(s_invs, kind="stable")  # stable so the head of a stratum corresponds to samples' original order
     ss_idxs: list[NDArray] = np.split(s_idxs, np.cumsum(s_cnts)[:-1])

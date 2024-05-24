@@ -7,15 +7,16 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SEED
 from sardalign.utils import count_lines, get_integer_sample_size, parse_arg_int_or_float
 from sardalign.utils.data import get_stratified_sample
 
 
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
     stream=sys.stdout,
 )
 LOGGER = logging.getLogger(__file__)
@@ -42,7 +43,7 @@ def main(args):
         args.output_jsonl = args.transcripts_jsonl.with_stem(stem)
     if args.output_jsonl.exists():
         raise FileExistsError(f"File already present at {args.output_jsonl}")
-    # transcripts JSON lines contains an "ID" column of the form 4800_10003_000000 which is {speaker}_{book}_{audio}
+    # MLS transcripts files contain an "ID" column of the form {speaker}_{book}_{audio} - e.g. 4800_10003_000000
     transcripts = pd.read_json(args.transcripts_jsonl, lines=True, orient="records", dtype={"ID": str})
     transcripts["speaker"] = transcripts["ID"].str.split("_").str[0].astype(int)  # speaker ID from ID column
     stratified_sample, _N = get_stratified_sample(
@@ -51,8 +52,8 @@ def main(args):
         strata_label="speaker",
         shuffle=args.shuffle,
         verbose=args.verbose,
-        seed=args.seed,
         logger=LOGGER,
+        seed=args.seed,
     )
     assert N == _N
     stratified_sample.drop(columns="speaker", inplace=True)
