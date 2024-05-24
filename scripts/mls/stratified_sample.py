@@ -5,7 +5,7 @@ import os
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
-from pprint import pformat, pprint
+from pprint import pformat
 from typing import Any
 
 import numpy as np
@@ -14,7 +14,6 @@ from numpy.typing import NDArray
 from pandas import DataFrame
 from sardalign.constants import SEED
 from sardalign.utils import parse_arg_int_or_float
-from sklearn.model_selection import train_test_split
 
 
 logging.basicConfig(
@@ -56,14 +55,17 @@ def get_stratified_sample(
         sample_size = int(sample_size * N)
     if sample_size >= N:
         raise ValueError("Sample size should be less than number of samples")
-    print(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
+    if verbose:
+        print(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
     criterion = data[strata_label]
     strata, s_invs, s_cnts = np.unique(criterion, return_inverse=True, return_counts=True)
     n_strata = len(strata)
-    print(f"Number of strata: {n_strata}")
+    if verbose:
+        print(f"Number of strata: {n_strata}")
     idxs_cnts_desc = np.argsort(s_cnts)[::-1]
     speaker_distribution_desc = {s: c for s, c in zip(strata[idxs_cnts_desc], s_cnts[idxs_cnts_desc])}
-    print(f"Speaker distribution (descending):\n{pformat(speaker_distribution_desc, sort_dicts=False)}")
+    if verbose:
+        print(f"Speaker distribution (descending):\n{pformat(speaker_distribution_desc, sort_dicts=False)}")
     s_idxs = np.argsort(s_invs, kind="stable")  # stable so the head of a stratum corresponds to samples' original order
     ss_idxs: list[NDArray] = np.split(s_idxs, np.cumsum(s_cnts)[:-1])
     if shuffle:
