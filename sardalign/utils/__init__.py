@@ -2,6 +2,7 @@ import json
 import os
 from argparse import ArgumentTypeError
 from pathlib import Path
+from typing import Generator
 
 import torch
 
@@ -13,9 +14,14 @@ def write_jsonl(
         f.write("\n".join(json.dumps(sd, ensure_ascii=ensure_ascii) for sd in samples) + "\n")
 
 
-def read_jsonl(jsonl: Path, mode: str = "r", encoding: str = "utf-8") -> list[dict]:
+def read_jsonl(
+    jsonl: Path,
+    mode: str = "r",
+    encoding: str = "utf-8",
+    return_generator: bool = False,
+) -> list[dict] | Generator:
     with open(jsonl, mode=mode, encoding=encoding) as f:
-        return [json.loads(line) for line in f]
+        return (json.loads(line) for line in f) if return_generator else [json.loads(line) for line in f]
 
 
 def echo_environment_info(torch, torchaudio, device: torch.device) -> None:
