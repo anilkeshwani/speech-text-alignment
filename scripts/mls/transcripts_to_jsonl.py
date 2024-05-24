@@ -7,17 +7,18 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import sox
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.utils import mls_id_to_path, write_jsonl
 from tqdm import tqdm
 
 
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger(__file__)
+LOGGER = logging.getLogger(__file__)
 
 
 def parse_args() -> Namespace:
@@ -66,10 +67,10 @@ def main(args: Namespace):
             }
         except OSError:  # sox raises an OSError and not a FileNotFoundError; think this is a sys call to soxi
             if args.verbose:
-                logger.info(f"Skipped addition of metadata for missing audio {audio_path}")
+                LOGGER.info(f"Skipped addition of metadata for missing audio {audio_path}")
         mls.append(sample_dict)
     write_jsonl(args.output_jsonl, mls)
-    logger.info(f"Wrote {len(mls)} samples to {args.output_jsonl!s}")
+    LOGGER.info(f"Wrote {len(mls)} samples to {args.output_jsonl!s}")
 
 
 if __name__ == "__main__":
