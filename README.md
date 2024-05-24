@@ -168,7 +168,7 @@ Can optionally pass a `--output-jsonl` to specify where the output will be saved
 
 
 <details>
-  <summary>Example Output when calling _compute_speaker_distribution_jsonl.py_</summary>
+  <summary>Example Output when calling <i>compute_speaker_distribution_jsonl.py</i></summary>
   
   ````
     {6563: 2352,
