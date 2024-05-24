@@ -41,8 +41,8 @@ def parse_args():
 def get_integer_sample_size(sample_size: int | float, N: int) -> int:
     if not isinstance(sample_size, (int, float)):
         raise TypeError(f"sample_size should be one of int or float but got {type(sample_size)}")
-    if isinstance(args.sample, float):
-        sample_size = int(args.sample * N)
+    if isinstance(sample_size, float):
+        sample_size = int(sample_size * N)
     return sample_size
 
 
