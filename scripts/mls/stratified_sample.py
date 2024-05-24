@@ -13,7 +13,7 @@ import pandas as pd
 from numpy.typing import NDArray
 from pandas import DataFrame
 from sardalign.constants import SEED
-from sardalign.utils import parse_arg_int_or_float
+from sardalign.utils import count_lines, parse_arg_int_or_float
 
 
 logging.basicConfig(
@@ -22,7 +22,7 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO").upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger(__file__)
+LOGGER = logging.getLogger(__file__)
 
 
 def parse_args():
@@ -35,37 +35,41 @@ def parse_args():
     parser.add_argument("--seed", default=SEED, type=int, help="Random seed")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
-    if args.output_jsonl is None:
-        stem = args.transcripts_jsonl.stem + f"_stratified_sample_{args.sample}"
-        args.output_jsonl = args.transcripts_jsonl.with_stem(stem)
     return args
+
+
+def get_integer_sample_size(sample_size: int | float, N: int) -> int:
+    if not isinstance(sample_size, (int, float)):
+        raise TypeError(f"sample_size should be one of int or float but got {type(sample_size)}")
+    if isinstance(args.sample, float):
+        sample_size = int(args.sample * N)
+    return sample_size
 
 
 def get_stratified_sample(
     data: DataFrame,
-    sample_size: int | float,
+    sample_size: int,
     strata_label: str,
     shuffle: bool,
     verbose: bool,
     seed: int | None = None,
-):
+    logger: logging.Logger | None = None,
+) -> tuple[DataFrame, int]:
     prng = np.random.default_rng(seed)
     N = len(data)
-    if isinstance(sample_size, float):
-        sample_size = int(sample_size * N)
     if sample_size >= N:
         raise ValueError("Sample size should be less than number of samples")
-    if verbose:
-        print(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
+    if verbose and logger is not None:
+        logger.info(f"Obtaining stratified sample of size {sample_size} (from {N} total samples)")
     criterion = data[strata_label]
     strata, s_invs, s_cnts = np.unique(criterion, return_inverse=True, return_counts=True)
     n_strata = len(strata)
-    if verbose:
-        print(f"Number of strata: {n_strata}")
+    if verbose and logger is not None:
+        logger.info(f"Number of strata: {n_strata}")
     idxs_cnts_desc = np.argsort(s_cnts)[::-1]
     speaker_distribution_desc = {s: c for s, c in zip(strata[idxs_cnts_desc], s_cnts[idxs_cnts_desc])}
-    if verbose:
-        print(f"Speaker distribution (descending):\n{pformat(speaker_distribution_desc, sort_dicts=False)}")
+    if verbose and logger is not None:
+        logger.info(f"Speaker distribution (descending):\n{pformat(speaker_distribution_desc, sort_dicts=False)}")
     s_idxs = np.argsort(s_invs, kind="stable")  # stable so the head of a stratum corresponds to samples' original order
     ss_idxs: list[NDArray] = np.split(s_idxs, np.cumsum(s_cnts)[:-1])
     if shuffle:
@@ -81,29 +85,38 @@ def get_stratified_sample(
         samples_to_take -= len(ss_idxs_selected[stratum])
     assert sum(len(_) for _ in ss_idxs_selected.values()) == sample_size
     ss_idxs_selected = np.concatenate(list(ss_idxs_selected.values()))
-    return data.loc[ss_idxs_selected]
+    stratified_sample = data.loc[ss_idxs_selected]
+    assert len(stratified_sample) == sample_size
+    return stratified_sample, N
 
 
 def main(args):
+    N = count_lines(args.transcripts_jsonl)
+    sample_size = get_integer_sample_size(args.sample, N)
+    if args.output_jsonl is None:
+        stem = args.transcripts_jsonl.stem + f"_stratified_sample_{sample_size}"
+        args.output_jsonl = args.transcripts_jsonl.with_stem(stem)
     if args.output_jsonl.exists():
         raise FileExistsError(f"File already present at {args.output_jsonl}")
-    # transcripts df contains an "ID" column of the form 4800_10003_000000 which is {speaker}_{book}_{audio}
+    # transcripts JSON lines contains an "ID" column of the form 4800_10003_000000 which is {speaker}_{book}_{audio}
     transcripts = pd.read_json(args.transcripts_jsonl, lines=True, orient="records", dtype={"ID": str})
-    # Create a new speaker column by extracting the number before the first underscore from the "ID" column
-    transcripts["speaker"] = transcripts["ID"].str.split("_").str[0].astype(int)
-    stratified_sample = get_stratified_sample(
+    transcripts["speaker"] = transcripts["ID"].str.split("_").str[0].astype(int)  # speaker ID from ID column
+    stratified_sample, _N = get_stratified_sample(
         transcripts,
-        args.sample,
+        sample_size,
         strata_label="speaker",
         shuffle=args.shuffle,
         verbose=args.verbose,
         seed=args.seed,
+        logger=LOGGER,
     )
+    assert N == _N
     stratified_sample.drop(columns="speaker", inplace=True)
-    print(stratified_sample.head())
+    if args.verbose:
+        LOGGER.info(stratified_sample.head())
     with open(args.output_jsonl, "x") as f:
         f.write(stratified_sample.to_json(orient="records", lines=True, force_ascii=args.force_ascii))
-    logger.info(f"Wrote {len(stratified_sample)} lines to {args.output_jsonl!s}")
+    LOGGER.info(f"Wrote {sample_size} lines to {args.output_jsonl!s}")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import json
+import os
 from argparse import ArgumentTypeError
 from pathlib import Path
 
@@ -40,6 +41,16 @@ def get_device(device: str | None = None) -> torch.device:
     mps_built = torch.backends.mps.is_built()
     local_device = "mps" if (mps_available and mps_built) else "cpu"
     return torch.device("cuda" if torch.cuda.is_available() else local_device)
+
+
+def count_lines(file: Path | str, max_bytes_to_check: int = 32):
+    with open(file, mode="rb") as f:
+        f.seek(-max_bytes_to_check, os.SEEK_END)
+        data = f.read(max_bytes_to_check)
+        if not data.endswith(b"\n"):
+            raise ValueError(f"Input file is not terminated with a trailing newline: {file!s}")
+        f.seek(0)
+        return sum(1 for _ in f)
 
 
 def ljspeech_id_to_path(lj_id: str, audio_dir: Path, suffix: str = ".wav") -> Path:
