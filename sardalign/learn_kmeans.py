@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import logging
 import os
 import sys
@@ -12,17 +7,18 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SEED
 from sklearn.cluster import MiniBatchKMeans
 
 
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger("learn_kmeans")
+LOGGER = logging.getLogger(__name__)
 
 
 def get_km_model(
@@ -64,7 +60,7 @@ def load_feature_shard(feat_dir, split, nshard, rank, percent):
         indices = np.random.choice(len(lengs), nsample, replace=False)
         feat = np.load(feat_path, mmap_mode="r")
         sampled_feat = np.concatenate([feat[offsets[i] : offsets[i] + lengs[i]] for i in indices], axis=0)
-        logger.info((f"sampled {nsample} utterances, {len(sampled_feat)} frames " f"from shard {rank}/{nshard}"))
+        LOGGER.info((f"sampled {nsample} utterances, {len(sampled_feat)} frames " f"from shard {rank}/{nshard}"))
         return sampled_feat
 
 
@@ -111,8 +107,8 @@ def learn_kmeans(
     joblib.dump(km_model, km_path)
 
     inertia = -km_model.score(feat) / len(feat)
-    logger.info("total intertia: %.5f", inertia)
-    logger.info("finished successfully")
+    LOGGER.info("total intertia: %.5f", inertia)
+    LOGGER.info("finished successfully")
 
 
 if __name__ == "__main__":
