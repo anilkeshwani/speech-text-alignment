@@ -1,8 +1,3 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import logging
 import os
 import sys
@@ -28,7 +23,7 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO").upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger("feature_utils")
+logger = logging.getLogger(__name__)
 
 
 def get_shard_range(tot: int, nshard: int, rank: int) -> tuple[int, int]:
