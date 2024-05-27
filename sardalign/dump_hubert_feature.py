@@ -8,6 +8,7 @@ import fairseq
 import torch
 import torch.nn.functional as F
 from fairseq.data.audio.audio_utils import get_features_or_waveform
+
 from sardalign.utils.features import dump_feature, get_mls_path_iterator
 
 

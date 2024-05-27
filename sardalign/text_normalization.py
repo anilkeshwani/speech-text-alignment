@@ -1,8 +1,9 @@
 import re
 import unicodedata
 
-from sardalign.norm_config import norm_config
 from unidecode import unidecode
+
+from sardalign.norm_config import norm_config
 
 
 def text_normalize(

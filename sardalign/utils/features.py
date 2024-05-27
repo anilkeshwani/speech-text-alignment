@@ -6,6 +6,7 @@ from typing import Callable, TYPE_CHECKING
 
 import tqdm
 from npy_append_array import NpyAppendArray
+
 from sardalign.utils import mls_id_to_path, read_jsonl
 
 

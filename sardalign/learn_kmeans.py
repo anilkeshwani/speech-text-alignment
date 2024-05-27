@@ -7,9 +7,10 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+from sklearn.cluster import MiniBatchKMeans
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SEED
-from sklearn.cluster import MiniBatchKMeans
 
 
 logging.basicConfig(

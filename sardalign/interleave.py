@@ -7,6 +7,8 @@ from pathlib import Path
 import sox
 import torch
 import torchaudio
+from tqdm import tqdm
+
 from sardalign.align_and_segment import get_alignments
 from sardalign.constants import STAR_TOKEN
 from sardalign.dump_hubert_feature import HubertFeatureReader
@@ -14,7 +16,6 @@ from sardalign.dump_km_label import ApplyKmeans
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict
-from tqdm import tqdm
 
 
 def parse_args() -> Namespace:
