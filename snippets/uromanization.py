@@ -68,14 +68,14 @@ def main(args):
     print(f"Took {time.perf_counter() - lap:.2f}s - Normalizing transcripts")
     lap = time.perf_counter()
 
-    # # Implementation via Perl script w/ a lot of IO
-    # tokens_s_perl = []
-    # for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
-    #     tokens_s_perl.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
-    # print(
-    #     f"Took {time.perf_counter() - lap:.2f}s - "
-    #     "Romanizing transcripts: Implementation via Perl script w/ a lot of IO"
-    # )
+    # Implementation via Perl script w/ a lot of IO
+    tokens_s_perl = []
+    for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
+        tokens_s_perl.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
+    print(
+        f"Took {time.perf_counter() - lap:.2f}s - "
+        "Romanizing transcripts: Implementation via Perl script w/ a lot of IO"
+    )
     lap = time.perf_counter()
 
     # # Implementation via Python w/o IO
@@ -91,10 +91,10 @@ def main(args):
     print(f"Took {time.perf_counter() - lap:.2f}s - " "Romanizing transcripts: Implementation in native Python w/o IO")
     lap = time.perf_counter()
 
-    # # Write to disk
-    # dataset_perl = [s | {"uroman_tokens": tokens_perl} for s, tokens_perl in zip(dataset, tokens_s_perl)]
-    # args.out_dir.mkdir(parents=True, exist_ok=True)
-    # write_jsonl(args.out_dir / "uromanized_perl.jsonl", dataset_perl)
+    # Write to disk
+    dataset_perl = [s | {"uroman_tokens": tokens_perl} for s, tokens_perl in zip(dataset, tokens_s_perl)]
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    write_jsonl(args.out_dir / "uromanized_perl.jsonl", dataset_perl)
 
     dataset_python = [s | {"uroman_tokens": tokens_python} for s, tokens_python in zip(dataset, tokens_s_python)]
     args.out_dir.mkdir(parents=True, exist_ok=True)
