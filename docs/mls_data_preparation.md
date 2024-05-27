@@ -3,10 +3,10 @@
 Given the weight of the MLS dataset, we want to unpack a targeted subset of it for training. We will do this in the following steps, focussing on the train set since the dev and test splits are a manageable size:
 
 1. Convert the transcripts.txt file to JSON lines format - this is useful downstream when we will concatenate several datasets including GigaSpeech, VoxPopuli, SPGISpeech and others, as well as text-only datasets. 
-2. Transcribe all the transcripts into "universal roman" characters via _uroman_
-3. Select a stratified sample of ~25% of the train set, stratifying by speaker to obtain an maximally diverse subset (e.g. vocal characteristics, accent)
-4. Create a manifest (file list) of the files to extract given this stratified sample
-5. Unpack the files given this manifest
+2. Select a stratified sample of ~25% of the train set, stratifying by speaker to obtain an maximally diverse subset (e.g. vocal characteristics, accent)
+3. Create a manifest (file list) of the files to extract given this stratified sample
+4. Unpack the files given this manifest
+5. Transcribe the stratified samples' transcripts into "universal roman" characters via _uroman_
 6. Compute alignments for all audios and text transcripts with the MMS aligner and save token-level audio segments to disk with accompanying transcripts
     - a JSON lines file containing the ID, transcript, text token, start time, end time and duration (end time - start time + 2*context padding)
 7. Featurize the token-wise segmented audio files with a HuBERT model
