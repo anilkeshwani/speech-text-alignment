@@ -21,9 +21,8 @@ TORCHAUDIO_BACKEND = "soundfile" if platform.system() == "Darwin" else None
 def generate_emissions(model, audio_file: str | Path):
     waveform, _ = torchaudio.load(audio_file, backend=TORCHAUDIO_BACKEND)  # waveform: channels X T
     waveform = waveform.to(DEVICE)
-    total_duration = sox.file_info.duration(audio_file)
+    total_duration = sox.file_info.duration(audio_file)  # output from bash soxi -D "$audio_file"; e.g. 15.180000
     assert total_duration is not None
-
     audio_sf = sox.file_info.sample_rate(audio_file)
     assert audio_sf == SAMPLING_FREQ
 
@@ -32,7 +31,6 @@ def generate_emissions(model, audio_file: str | Path):
         i = 0
         while i < total_duration:
             segment_start_time, segment_end_time = (i, i + EMISSION_INTERVAL)
-
             context = EMISSION_INTERVAL * 0.1
             input_start_time = max(segment_start_time - context, 0)
             input_end_time = min(segment_end_time + context, total_duration)
@@ -40,13 +38,11 @@ def generate_emissions(model, audio_file: str | Path):
                 :,
                 int(SAMPLING_FREQ * input_start_time) : int(SAMPLING_FREQ * (input_end_time)),
             ]
-
             model_outs, _ = model(waveform_split)
             emissions_ = model_outs[0]
             emission_start_frame = time_to_frame(segment_start_time)
             emission_end_frame = time_to_frame(segment_end_time)
             offset = time_to_frame(input_start_time)
-
             emissions_ = emissions_[emission_start_frame - offset : emission_end_frame - offset, :]
             emissions_arr.append(emissions_)
             i += EMISSION_INTERVAL
