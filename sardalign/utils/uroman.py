@@ -28,6 +28,7 @@ import json
 import os
 import pathlib
 import pstats
+import re
 import sys
 import unicodedata as ud
 from collections import defaultdict
@@ -37,6 +38,14 @@ from typing import List, Optional, Tuple, Union
 
 import regex
 from memory_profiler import profile
+from sardalign.utils.align import normalize_uroman
+
+
+def post_process_uroman(tokens: list[str], normalize_uroman_post: bool):
+    tokens_pp = [re.sub(r"\s+", " ", " ".join(s.strip())).strip() for s in tokens]
+    if normalize_uroman_post:
+        tokens_pp = [normalize_uroman(s) for s in tokens_pp]
+    return tokens_pp
 
 
 # UTILITIES

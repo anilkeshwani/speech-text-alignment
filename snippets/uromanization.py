@@ -6,15 +6,14 @@ Script to
 2. benchmark original Perl vs Python implementations
 """
 
-import re
 import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import read_jsonl, write_jsonl
-from sardalign.utils.align import get_uroman_tokens, normalize_uroman
-from sardalign.utils.uroman import RomFormat, Uroman
+from sardalign.utils.align import get_uroman_tokens
+from sardalign.utils.uroman import post_process_uroman, RomFormat, Uroman
 from tqdm import tqdm
 
 
@@ -39,13 +38,6 @@ def parse_args() -> Namespace:
     return args
 
 
-def post_process_uroman(tokens: list[str], normalize_uroman_post: bool):
-    tokens_pp = [re.sub(r"\s+", " ", " ".join(s.strip())).strip() for s in tokens]
-    if normalize_uroman_post:
-        tokens_pp = [normalize_uroman(s) for s in tokens_pp]
-    return tokens_pp
-
-
 def main(args):
     lap = time.perf_counter()
     print(f"Script began at: {lap:.2f}")
@@ -68,17 +60,7 @@ def main(args):
     print(f"Took {time.perf_counter() - lap:.2f}s - Normalizing transcripts")
     lap = time.perf_counter()
 
-    # Implementation via Perl script w/ a lot of IO
-    tokens_s_perl = []
-    for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
-        tokens_s_perl.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
-    print(
-        f"Took {time.perf_counter() - lap:.2f}s - "
-        "Romanizing transcripts: Implementation via Perl script w/ a lot of IO"
-    )
-    lap = time.perf_counter()
-
-    # # Implementation via Python w/o IO
+    # Implementation via Python w/o IO
     uroman = Uroman(args.uroman_data_dir)
     tokens_s_python = []
     for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
@@ -92,13 +74,28 @@ def main(args):
     lap = time.perf_counter()
 
     # Write to disk
-    dataset_perl = [s | {"uroman_tokens": tokens_perl} for s, tokens_perl in zip(dataset, tokens_s_perl)]
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    write_jsonl(args.out_dir / "uromanized_perl.jsonl", dataset_perl)
-
     dataset_python = [s | {"uroman_tokens": tokens_python} for s, tokens_python in zip(dataset, tokens_s_python)]
     args.out_dir.mkdir(parents=True, exist_ok=True)
     write_jsonl(args.out_dir / "uromanized_python.jsonl", dataset_python)
+    print(f"Took {time.perf_counter() - lap:.2f}s - Writing Python outputs to disk")
+    lap = time.perf_counter()
+
+    # Implementation via Perl script w/ a lot of IO
+    tokens_s_perl = []
+    for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
+        tokens_s_perl.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
+    print(
+        f"Took {time.perf_counter() - lap:.2f}s - "
+        "Romanizing transcripts: Implementation via Perl script w/ a lot of IO"
+    )
+    lap = time.perf_counter()
+
+    # Write to disk
+    dataset_perl = [s | {"uroman_tokens": tokens_perl} for s, tokens_perl in zip(dataset, tokens_s_perl)]
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    write_jsonl(args.out_dir / "uromanized_perl.jsonl", dataset_perl)
+    print(f"Took {time.perf_counter() - lap:.2f}s - Writing Perl outputs to disk")
+    lap = time.perf_counter()
 
     print(f"Script ended at: {lap:.2f}")
 
