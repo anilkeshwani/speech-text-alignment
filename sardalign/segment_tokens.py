@@ -8,7 +8,7 @@ import sox
 import torch
 import torchaudio
 from sardalign.align_and_segment import get_alignments
-from sardalign.constants import STAR_TOKEN
+from sardalign.constants import PROJECT_ROOT, STAR_TOKEN
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict
@@ -38,7 +38,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--sample", type=int, default=None, help="Use a sample of the dataset for testing purposes")
     args = parser.parse_args()
     if args.uroman_path is None:
-        args.uroman_path = Path(__file__).parents[1] / "submodules" / "uroman" / "bin"
+        args.uroman_path = PROJECT_ROOT / "submodules" / "uroman" / "bin"
     return args
 
 

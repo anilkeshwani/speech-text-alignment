@@ -10,6 +10,7 @@ import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
+from sardalign.constants import PROJECT_ROOT
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import read_jsonl, write_jsonl
 from sardalign.utils.align import get_uroman_tokens
@@ -34,7 +35,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--sample", type=int, default=None, help="Use a sample of the dataset for testing purposes")
     args = parser.parse_args()
     if args.uroman_path is None:
-        args.uroman_path = Path(__file__).parents[1] / "submodules" / "uroman" / "bin"
+        args.uroman_path = PROJECT_ROOT / "submodules" / "uroman" / "bin"
     return args
 
 
