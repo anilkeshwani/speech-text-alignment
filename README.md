@@ -245,3 +245,28 @@ Sample of the output:
 {"ID": "7828_6974_000000", "transcript": "and leaping to her feet ran quickly to the door where she shot a wooden bolt into its socket thus securing them from interference from without then she returned to the center of the room and spoke rapidly to the englishman gesturing occasionally toward the body of the slain man", "uroman_tokens": ["a n d", "l e a p i n g", "t o", "h e r", "f e e t", "r a n", "q u i c k l y", "t o", "t h e", "d o o r", "w h e r e", "s h e", "s h o t", "a", "w o o d e n", "b o l t", "i n t o", "i t s", "s o c k e t", "t h u s", "s e c u r i n g", "t h e m", "f r o m", "i n t e r f e r e n c e", "f r o m", "w i t h o u t", "t h e n", "s h e", "r e t u r n e d", "t o", "t h e", "c e n t e r", "o f", "t h e", "r o o m", "a n d", "s p o k e", "r a p i d l y", "t o", "t h e", "e n g l i s h m a n", "g e s t u r i n g", "o c c a s i o n a l l y", "t o w a r d", "t h e", "b o d y", "o f", "t h e", "s l a i n", "m a n"]}
 {"ID": "11369_11135_000000", "transcript": "which the lictor remarked you are now on the road to death and not a single cash can you carry away with you repair this bridge and benefit the public", "uroman_tokens": ["w h i c h", "t h e", "l i c t o r", "r e m a r k e d", "y o u", "a r e", "n o w", "o n", "t h e", "r o a d", "t o", "d e a t h", "a n d", "n o t", "a", "s i n g l e", "c a s h", "c a n", "y o u", "c a r r y", "a w a y", "w i t h", "y o u", "r e p a i r", "t h i s", "b r i d g e", "a n d", "b e n e f i t", "t h e", "p u b l i c"]}
 ```
+
+Expected output when [run as of commit eb5dfac](https://github.com/anilkeshwani/speech-text-alignment/blob/eb5dfac0597e243ac6f9024e56b43d154b61b07b/sardalign/utils/uroman.py):
+
+```
+(sardalign) anilkeshwani@poseidon:/mnt/scratch-artemis/anilkeshwani/speech-text-alignment$ ./snippets/uromanization.py     \
+    --jsonl /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_1000.jsonl     \
+    --out-dir ../tmp/uroman_benchmarking/     \
+    --lang eng     \
+    --uroman-path ./submodules/uroman/bin/     \
+    --uroman-data-dir ./submodules/uroman/data/
+Script began at: 7258542.44
+Took 0.08s - Reading JSON lines
+Read 1000 lines from /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_1000.jsonl
+Tokenizing dataset: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:00<00:00, 278487.75it/s]
+Took 0.01s - Tokenising dataset
+Normalizing transcripts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:00<00:00, 2175.69it/s]
+Took 0.46s - Normalizing transcripts
+Getting uroman tokens for transcripts: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:04<00:00, 220.01it/s]
+Took 6.82s - Romanizing transcripts: Implementation in native Python w/o IO
+Took 0.02s - Writing Python outputs to disk
+Getting uroman tokens for transcripts: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [10:11<00:00,  1.64it/s]
+Took 611.07s - Romanizing transcripts: Implementation via Perl script w/ a lot of IO
+Took 0.11s - Writing Perl outputs to disk
+Script ended at: 7259160.99
+```
