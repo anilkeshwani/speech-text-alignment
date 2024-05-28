@@ -45,7 +45,7 @@ def parse_args() -> Namespace:
         help="Token delimiter as used by str.split; defaults to None, i.e. splits on any whitespace",
     )
     parser.add_argument("--use-star", action="store_true", help="Use star at the start of transcript")
-    parser.add_argument("--device", type=str, default=None, help="Device for ")
+    parser.add_argument("--device", type=str, default=None, help="Torch device; in string format")
     parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
     args = parser.parse_args()
     return args
@@ -86,7 +86,7 @@ def main(args):
 
     for file_id, tokens, norm_tokens, uroman_tokens in zip(file_id_s, tokens_s, norm_tokens_s, uroman_tokens_s):
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
-        segments, stride_ms = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star)
+        segments, stride_ms = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star, device)
         spans = get_spans(uroman_tokens, segments)
         outdir_segment = args.out_dir / file_id
         outdir_segment.mkdir()
