@@ -30,7 +30,7 @@ def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str |
     emissions_arr = []
     with torch.inference_mode():
         t_seconds = 0
-        while t_seconds < total_duration:
+        while t_seconds < total_duration:  # NOTE usually lasts 1 iteration - EMISSION_INTERVAL is 30s out-of-the-box
             segment_start_time, segment_end_time = (t_seconds, t_seconds + EMISSION_INTERVAL)
             input_start_time = max(segment_start_time - context, 0)
             input_end_time = min(segment_end_time + context, total_duration)
