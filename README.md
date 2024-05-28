@@ -190,10 +190,6 @@ Can optionally pass a `--output-jsonl` to specify where the output will be saved
     /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_0.25.jsonl
 ```
 
-## To Implement
-
-- Support for k-means clustering via [FAISS clustering](https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization) - Motivation: speed. Not a priority if the k-means clustering is a bottlenecked due to computational speed. See also [_Implementing K-Means clustering with FAISS_](https://www.kdnuggets.com/2021/01/k-means-faster-lower-error-scikit-learn.html) and [FAISS k-means snippet](/snippets/faiss_kmeans.py).
-
 ## Benchmarking
 
 ### Dump HuBERT Features
@@ -270,3 +266,9 @@ Took 611.07s - Romanizing transcripts: Implementation via Perl script w/ a lot o
 Took 0.11s - Writing Perl outputs to disk
 Script ended at: 7259160.99
 ```
+
+## To Implement
+
+- Support for k-means clustering via [FAISS clustering](https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization) - Motivation: speed. Not a priority if the k-means clustering is a bottlenecked due to computational speed. See also [_Implementing K-Means clustering with FAISS_](https://www.kdnuggets.com/2021/01/k-means-faster-lower-error-scikit-learn.html) and [FAISS k-means snippet](/snippets/faiss_kmeans.py).
+- Can we read directly from a compressed zip file with `fairseq.data.audio.audio_utils.get_features_or_waveform` since this allows specification of the `path` argument as either a `File path in the format of "<.npy/.wav/.flac path>" or "<zip path>:<byte offset>:<byte length>"` according to the docstring. Internally, there is a call to `get_features_or_waveform_from_stored_zip` which needs a byte offset in the zip file. 
+    - Do MLS, GigaSpeech or other large datasets that come as compressed zips provide these offsets? Can we compute them? Is this faster that decompressing _a priori_?
