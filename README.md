@@ -73,11 +73,9 @@ Example call:
 ```bash
 HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 
-cd "${HAFH}/speech-text-alignment/sardalign" # enter the package directory
-
-python segment_tokens.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl" \
-    --audio-dir "${HAFH}/data/MLS/mls_english/dev/audio" \
+.scripts/segment_tokens.py \
+    --jsonl "${HAFH}/data/MLS/mls_english/train/head_transcripts_stratified_sample_2702009.jsonl" \
+    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
     --out-dir "${HAFH}/tmp/MLS/mls_english/dev/audio_segmented" \
     --lang 'eng' \
     --sample 10
@@ -221,6 +219,14 @@ Can optionally pass a `--output-jsonl` to specify where the output will be saved
 ```bash
 ./compute_speaker_distribution_jsonl.py \
     /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_0.25.jsonl
+```
+
+#### Uromanization
+
+```bash
+./scripts/mls/uromanization_mp.py \
+    /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_2702009.jsonl \
+    --n-processes 64
 ```
 
 ## Benchmarking
