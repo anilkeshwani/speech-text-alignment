@@ -84,7 +84,7 @@ def main(args):
 
     segments_s, stride_s = [], []
 
-    for uroman_tokens, tokens, norm_tokens, file_id in zip(uroman_tokens_s, tokens_s, norm_tokens_s, file_id_s):
+    for file_id, tokens, norm_tokens, uroman_tokens in zip(file_id_s, tokens_s, norm_tokens_s, uroman_tokens_s):
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
         segments, stride = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star)
         spans = get_spans(uroman_tokens, segments)
