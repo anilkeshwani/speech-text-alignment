@@ -35,7 +35,7 @@ def parse_args() -> Namespace:
         "--transcript-stem-suffix", action="store_true", help="Append transcript span to output audio filenames"
     )
     parser.add_argument("--device", type=str, default=None, help="Device for ")
-    parser.add_argument("--sample", type=int, default=None, help="Use a sample of the dataset for testing purposes")
+    parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
     args = parser.parse_args()
     if args.uroman_path is None:
         args.uroman_path = PROJECT_ROOT / "submodules" / "uroman" / "bin"
@@ -49,8 +49,8 @@ def main(args):
     args.out_dir.mkdir(parents=True, exist_ok=False)
 
     dataset = read_jsonl(args.jsonl)
-    if args.sample is not None:
-        dataset = dataset[: args.sample]
+    if args.head is not None:
+        dataset = dataset[: args.head]
     print(f"Read {len(dataset)} lines from {args.jsonl}")
 
     transcripts_s: list[list[str]] = []
