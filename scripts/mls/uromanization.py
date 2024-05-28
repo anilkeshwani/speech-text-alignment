@@ -20,6 +20,7 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
     stream=sys.stdout,
 )
+
 LOGGER = logging.getLogger(__file__)
 
 
