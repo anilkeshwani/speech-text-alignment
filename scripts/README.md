@@ -31,17 +31,17 @@ Example call:
 ```bash
 HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 
-.scripts/segment_tokens.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/head_transcripts_stratified_sample_2702009.jsonl" \
+./scripts/segment_tokens.py \
+    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_existing_files_only.jsonl" \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
-    --out-dir "${HAFH}/tmp/MLS/mls_english/dev/audio_segmented" \
+    --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
     --lang 'eng' \
-    --sample 10
+    --head 10
 ```
 
 ## Generating Interleaved Datasets
 
-```
+```bash
 #!/usr/bin/env bash
 
 set -euo pipefail
