@@ -59,25 +59,25 @@ def main(args):
     norm_transcripts_s = []
     for transcripts in tqdm(transcripts_s, desc="Normalizing transcripts"):
         norm_transcripts_s.append([text_normalize(token, args.lang) for token in transcripts])
-    uroman_tokens_s = []
+    tokens_s = []
     for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
-        uroman_tokens_s.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
+        tokens_s.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
 
     model, dictionary = load_model_dict()
     model = model.to(device)
 
     if args.use_star:
         dictionary[STAR_TOKEN] = len(dictionary)
-        uroman_tokens_s = [[STAR_TOKEN] + tokens for tokens in uroman_tokens_s]
+        tokens_s = [[STAR_TOKEN] + tokens for tokens in tokens_s]
         transcripts_s = [[STAR_TOKEN] + transcripts for transcripts in transcripts_s]
         norm_transcripts_s = [[STAR_TOKEN] + norm_transcripts for norm_transcripts in norm_transcripts_s]
 
     file_id_s = [sd["ID"] for sd in dataset]
-    assert len(uroman_tokens_s) == len(transcripts_s) == len(norm_transcripts_s) == len(file_id_s)
+    assert len(tokens_s) == len(transcripts_s) == len(norm_transcripts_s) == len(file_id_s)
 
     segments_s, stride_s = [], []
 
-    for tokens, transcripts, norm_transcripts, file_id in zip(uroman_tokens_s, transcripts_s, norm_transcripts_s, file_id_s):
+    for tokens, transcripts, norm_transcripts, file_id in zip(tokens_s, transcripts_s, norm_transcripts_s, file_id_s):
         assert len(tokens) == len(transcripts) == len(norm_transcripts), "Inconsistent tokens after norm/uroman G2P"
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
         segments, stride = get_alignments(audio_path, tokens, model, dictionary, args.use_star)
