@@ -10,7 +10,7 @@ from pathlib import Path
 import sox
 import torch
 import torchaudio
-from sardalign.align_and_segment import get_alignments
+from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import STAR_TOKEN
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
@@ -86,9 +86,8 @@ def main(args):
 
     for file_id, tokens, norm_tokens, uroman_tokens in zip(file_id_s, tokens_s, norm_tokens_s, uroman_tokens_s):
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
-        segments, stride = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star)
+        segments, stride_ms = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star)
         spans = get_spans(uroman_tokens, segments)
-
         outdir_segment = args.out_dir / file_id
         outdir_segment.mkdir()
         with open(outdir_segment / "manifest.json", "x") as f:
@@ -97,8 +96,8 @@ def main(args):
                 seg_start_idx = span[0].start
                 seg_end_idx = span[-1].end
 
-                audio_start_sec = seg_start_idx * stride / 1000
-                audio_end_sec = seg_end_idx * stride / 1000
+                audio_start_sec = seg_start_idx * stride_ms / 1000
+                audio_end_sec = seg_end_idx * stride_ms / 1000
 
                 output_file = (outdir_segment / f"segment_{i}").with_suffix(".flac")
 
@@ -117,7 +116,7 @@ def main(args):
                 f.write(json.dumps(sample) + "\n")
 
         segments_s.append(segments)
-        stride_s.append(stride)
+        stride_s.append(stride_ms)
 
     return segments_s, stride_s
 

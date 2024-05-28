@@ -7,7 +7,7 @@ from pathlib import Path
 import sox
 import torch
 import torchaudio
-from sardalign.align_and_segment import get_alignments
+from sardalign.align import get_alignments
 from sardalign.constants import PROJECT_ROOT, STAR_TOKEN
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl

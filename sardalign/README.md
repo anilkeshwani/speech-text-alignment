@@ -27,9 +27,9 @@ We describe the process of aligning long audio files with their transcripts and 
   Text of the desired third segment
   ```
 
-- Step 5: Run forced alignment and segment the audio file into shorter segments. 
+- Step 5: Run forced alignment and segment the audio file into shorter segments. **Note that this script now resides in the _scripts/_ directory. Notes have been left here to preserve the original README from fairseq.**
   ```
-  python align_and_segment.py --audio /path/to/audio.wav --text_filepath /path/to/textfile --lang <iso> --outdir /path/to/output --uroman /path/to/uroman/bin 
+  python ./scripts/align_and_segment.py --audio /path/to/audio.wav --text_filepath /path/to/textfile --lang <iso> --outdir /path/to/output --uroman /path/to/uroman/bin 
   ```
 
   The above code  will generated the audio segments under output directory based on the content of each line in the input text file. The `manifest.json` file consisting of the of segmented audio filepaths and their corresponding transcripts. 
