@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 import torch
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from torchaudio.models import wav2vec2_model
+from torchaudio.models import wav2vec2_model, Wav2Vec2Model
 
 
 logging.basicConfig(
@@ -94,7 +94,7 @@ def time_to_frame(time):
 def load_model_dict(
     model_path_name: str = "/tmp/ctc_alignment_mling_uroman_model.pt",
     dict_path_name: str = "/tmp/ctc_alignment_mling_uroman_model.dict",
-):
+) -> tuple[Wav2Vec2Model, dict[str, int]]:
     LOGGER.info("Downloading model and dictionary...")
     if os.path.exists(model_path_name):
         LOGGER.info("Model path already exists. Skipping downloading....")

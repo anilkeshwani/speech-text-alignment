@@ -18,7 +18,7 @@ DEVICE = get_device()
 TORCHAUDIO_BACKEND = "soundfile" if platform.system() == "Darwin" else None
 
 
-def generate_emissions(model, audio_file: str | Path):
+def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str | Path):
     waveform, _ = torchaudio.load(audio_file, backend=TORCHAUDIO_BACKEND)  # waveform: channels X T
     waveform = waveform.to(DEVICE)
     total_duration = sox.file_info.duration(audio_file)  # output from bash soxi -D "$audio_file"; e.g. 15.180000
@@ -26,18 +26,15 @@ def generate_emissions(model, audio_file: str | Path):
     audio_sf = sox.file_info.sample_rate(audio_file)
     assert audio_sf == SAMPLING_FREQ
 
+    context: float = EMISSION_INTERVAL * 0.1
     emissions_arr = []
     with torch.inference_mode():
         i = 0
         while i < total_duration:
             segment_start_time, segment_end_time = (i, i + EMISSION_INTERVAL)
-            context = EMISSION_INTERVAL * 0.1
             input_start_time = max(segment_start_time - context, 0)
             input_end_time = min(segment_end_time + context, total_duration)
-            waveform_split = waveform[
-                :,
-                int(SAMPLING_FREQ * input_start_time) : int(SAMPLING_FREQ * (input_end_time)),
-            ]
+            waveform_split = waveform[:, int(SAMPLING_FREQ * input_start_time) : int(SAMPLING_FREQ * (input_end_time))]
             model_outs, _ = model(waveform_split)
             emissions_ = model_outs[0]
             emission_start_frame = time_to_frame(segment_start_time)
@@ -56,11 +53,11 @@ def generate_emissions(model, audio_file: str | Path):
 
 
 def get_alignments(
-    audio_file,
-    tokens,
-    model,
-    dictionary,
-    use_star,
+    audio_file: str | Path,
+    uroman_tokens: list[str],
+    model: torchaudio.models.Wav2Vec2Model,
+    dictionary: dict[str, int],
+    use_star: bool,
 ):
     # Generate emissions
     emissions, stride = generate_emissions(model, audio_file)
@@ -69,8 +66,8 @@ def get_alignments(
         emissions = torch.cat([emissions, torch.zeros(T, 1).to(DEVICE)], dim=1)
 
     # Force Alignment
-    if tokens:
-        token_indices = [dictionary[c] for c in " ".join(tokens).split(" ") if c in dictionary]
+    if uroman_tokens:
+        token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]
     else:
         print(f"Empty transcript!!!!! for audio file {audio_file}")
         token_indices = []
