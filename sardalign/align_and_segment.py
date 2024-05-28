@@ -12,20 +12,20 @@ from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device
 from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
+from torch import Tensor
 
 
 DEVICE = get_device()
 TORCHAUDIO_BACKEND = "soundfile" if platform.system() == "Darwin" else None
 
 
-def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str | Path):
+def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str | Path) -> tuple[Tensor, float]:
     waveform, _ = torchaudio.load(audio_file, backend=TORCHAUDIO_BACKEND)  # waveform: channels X T
     waveform = waveform.to(DEVICE)
     total_duration = sox.file_info.duration(audio_file)  # output from bash soxi -D "$audio_file"; e.g. 15.180000
     assert total_duration is not None
     audio_sf = sox.file_info.sample_rate(audio_file)
     assert audio_sf == SAMPLING_FREQ
-
     context: float = EMISSION_INTERVAL * 0.1
     emissions_arr = []
     with torch.inference_mode():
@@ -43,12 +43,9 @@ def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str |
             emissions_ = emissions_[emission_start_frame - offset : emission_end_frame - offset, :]
             emissions_arr.append(emissions_)
             t_seconds += EMISSION_INTERVAL
-
     emissions = torch.cat(emissions_arr, dim=0).squeeze()
     emissions = torch.log_softmax(emissions, dim=-1)
-
     stride_ms = float(waveform.size(1) * 1000 / emissions.size(0) / SAMPLING_FREQ)  # milliseconds
-
     return emissions, stride_ms
 
 
