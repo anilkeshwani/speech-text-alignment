@@ -1,12 +1,24 @@
+import logging
 import math
 import os
 import re
+import sys
 import tempfile
 from dataclasses import dataclass
 
 import torch
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from torchaudio.models import wav2vec2_model
 
+
+logging.basicConfig(
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
+    stream=sys.stdout,
+)
+
+LOGGER = logging.getLogger(__file__)
 
 # iso codes with specialized rules in uroman
 special_isos_uroman = "ara, bel, bul, deu, ell, eng, fas, grc, ell, eng, heb, kaz, kir, lav, lit, mkd, mkd2, oss, pnt, pus, rus, srp, srp2, tur, uig, ukr, yid".split(
@@ -79,12 +91,13 @@ def time_to_frame(time):
     return int(time * frames_per_sec)
 
 
-def load_model_dict():
-    model_path_name = "/tmp/ctc_alignment_mling_uroman_model.pt"
-
-    print("Downloading model and dictionary...")
+def load_model_dict(
+    model_path_name: str = "/tmp/ctc_alignment_mling_uroman_model.pt",
+    dict_path_name: str = "/tmp/ctc_alignment_mling_uroman_model.dict",
+):
+    LOGGER.info("Downloading model and dictionary...")
     if os.path.exists(model_path_name):
-        print("Model path already exists. Skipping downloading....")
+        LOGGER.info("Model path already exists. Skipping downloading....")
     else:
         torch.hub.download_url_to_file(
             "https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/model.pt",
@@ -122,9 +135,8 @@ def load_model_dict():
     model.load_state_dict(state_dict)
     model.eval()
 
-    dict_path_name = "/tmp/ctc_alignment_mling_uroman_model.dict"
     if os.path.exists(dict_path_name):
-        print("Dictionary path already exists. Skipping downloading....")
+        LOGGER.info("Dictionary path already exists. Skipping downloading....")
     else:
         torch.hub.download_url_to_file(
             "https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/dictionary.txt",
