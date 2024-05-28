@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from pprint import pformat
 
@@ -15,7 +16,22 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+
+
+def parse_args() -> Namespace:
+    parser = ArgumentParser()
+    parser.add_argument("--jsonl", type=Path, required=True, help="Path to JSON lines manifest file")
+    parser.add_argument("--audio-dir", type=Path, required=True, help="Directory containing MLS audios")
+    parser.add_argument("--ckpt-path", type=str, required=True, help="Path to pre-trained HuBERT checkpoint")
+    parser.add_argument("--layer", type=int, required=True, help="BERT layer whose embeddings to use as features")
+    parser.add_argument("--nshard", type=int, default=1, help="Number of shards for parallel processing")
+    parser.add_argument("--rank", type=int, default=0, help="GPU rank")
+    parser.add_argument("--feat-dir", type=Path, required=True, help="Output directory for HuBERT features")
+    parser.add_argument("--max-chunk", type=int, default=1_600_000, help="Maximum audio chunk length in samples")
+    parser.add_argument("--suffix", type=str, default=".flac", help="File extension for audio files")
+    args = parser.parse_args()
+    return args
 
 
 def main(
@@ -38,19 +54,6 @@ def main(
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--jsonl", type=Path, required=True, help="Path to JSON lines manifest file")
-    parser.add_argument("--audio-dir", type=Path, required=True, help="Directory containing MLS audios")
-    parser.add_argument("--ckpt-path", type=str, required=True, help="Path to pre-trained HuBERT checkpoint")
-    parser.add_argument("--layer", type=int, required=True, help="BERT layer whose embeddings to use as features")
-    parser.add_argument("--nshard", type=int, default=1, help="Number of shards for parallel processing")
-    parser.add_argument("--rank", type=int, default=0, help="GPU rank")
-    parser.add_argument("--feat-dir", type=Path, required=True, help="Output directory for HuBERT features")
-    parser.add_argument("--max-chunk", type=int, default=1_600_000, help="Maximum audio chunk length in samples")
-    parser.add_argument("--suffix", type=str, default=".flac", help="File extension for audio files")
-    args = parser.parse_args()
-    logger.info(pformat(vars(args), sort_dicts=False))
-
+    args = parse_args()
+    LOGGER.info(pformat(vars(args), sort_dicts=False))
     main(**vars(args))
