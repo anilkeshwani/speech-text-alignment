@@ -29,9 +29,9 @@ def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str |
     context: float = EMISSION_INTERVAL * 0.1
     emissions_arr = []
     with torch.inference_mode():
-        i = 0
-        while i < total_duration:
-            segment_start_time, segment_end_time = (i, i + EMISSION_INTERVAL)
+        t_seconds = 0
+        while t_seconds < total_duration:
+            segment_start_time, segment_end_time = (t_seconds, t_seconds + EMISSION_INTERVAL)
             input_start_time = max(segment_start_time - context, 0)
             input_end_time = min(segment_end_time + context, total_duration)
             waveform_split = waveform[:, int(SAMPLING_FREQ * input_start_time) : int(SAMPLING_FREQ * (input_end_time))]
@@ -42,7 +42,7 @@ def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str |
             offset = time_to_frame(input_start_time)
             emissions_ = emissions_[emission_start_frame - offset : emission_end_frame - offset, :]
             emissions_arr.append(emissions_)
-            i += EMISSION_INTERVAL
+            t_seconds += EMISSION_INTERVAL
 
     emissions = torch.cat(emissions_arr, dim=0).squeeze()
     emissions = torch.log_softmax(emissions, dim=-1)
