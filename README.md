@@ -146,19 +146,3 @@ Run:
 ```bash
 ./resample_audio_files_ffmpeg_parallel.sh
 ```
-
-#### Benchmarks with different numbers of processes
-
-Benchmarks on Artemis via
-
-```bash
-time ./resample_audio_files_ffmpeg_parallel.sh
-```
-
-|N_JOBS|real     |user     |sys      |
-|------|---------|---------|---------|
-|100   |0m39.185s|8m30.834s|6m27.732s|
-|64    |0m38.822s|8m31.884s|6m28.664s|
-|32    |0m39.157s|8m32.408s|6m26.920s|
-|16    |0m52.070s|8m16.316s|6m6.157s |
-|2     |6m25.868s|8m25.961s|5m28.323s|
