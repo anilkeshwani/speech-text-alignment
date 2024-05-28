@@ -21,7 +21,11 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
     stream=sys.stdout,
 )
+
 LOGGER = logging.getLogger(__file__)
+
+UROMAN_DATA_DIR = PROJECT_ROOT / "submodules" / "uroman" / "data"
+UROMAN = Uroman(UROMAN_DATA_DIR)
 
 
 def parse_args() -> Namespace:
@@ -32,6 +36,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--n-processes", type=int, default=None, help="Number of parallel processes")
     parser.add_argument("--text-key", type=str, default="transcript", help="Key of text field in JSON lines manifest")
     parser.add_argument("--uroman-key", type=str, default="uroman", help="Key for uroman tokens in JSON lines manifest")
+    parser.add_argument("--normalized-key", type=str, default="normalized", help="Key for normalized tokens")
     parser.add_argument(
         "--token-delimiter",
         type=str,
@@ -46,12 +51,9 @@ def parse_args() -> Namespace:
     return args
 
 
-UROMAN_DATA_DIR = PROJECT_ROOT / "submodules" / "uroman" / "data"
-
-
-def uromanize_chunk(chunk: list[list[str]], lang: str, uroman=Uroman(UROMAN_DATA_DIR)):
+def uromanize_chunk(chunk: list[list[str]], lang: str, uroman=UROMAN):
     chunk_results = []
-    for nt in chunk:
+    for nt in tqdm(chunk, desc="Uromanization"):
         chunk_results.append(
             post_process_uroman(
                 [
@@ -66,7 +68,7 @@ def uromanize_chunk(chunk: list[list[str]], lang: str, uroman=Uroman(UROMAN_DATA
 
 def normalize_chunk(chunk: list[list[str]], lang: str):
     chunk_results: list[list[str]] = []
-    for transcripts in chunk:
+    for transcripts in tqdm(chunk, "Normalization"):
         chunk_results.append([text_normalize(token, lang) for token in transcripts])
     return chunk_results
 
@@ -86,26 +88,19 @@ def main(args):
 
     transcripts_s_chunks = [transcripts_s[i : i + chunk_size] for i in range(0, len(transcripts_s), chunk_size)]
     with mp.Pool(processes=args.n_processes) as pool:
-        results = list(
-            tqdm(
-                pool.starmap(normalize_chunk, [(chunk, args.lang) for chunk in transcripts_s_chunks]),
-                total=args.n_processes,
-                desc="Normalizing transcripts",
-            )
-        )
+        normalized_chunks = list(pool.starmap(normalize_chunk, [(chunk, args.lang) for chunk in transcripts_s_chunks]))
+
+    normalized_tokens_s = [item for sublist in normalized_chunks for item in sublist]
 
     with mp.Pool(processes=args.n_processes) as pool:
-        results = list(
-            tqdm(
-                pool.starmap(uromanize_chunk, [(chunk, args.lang) for chunk in results]),
-                total=args.n_processes,
-                desc="Processing uroman",
-            )
-        )
+        results = list(pool.starmap(uromanize_chunk, [(chunk, args.lang) for chunk in normalized_chunks]))
 
-    tokens_s = [item for sublist in results for item in sublist]
+    uroman_tokens_s = [item for sublist in results for item in sublist]
 
-    dataset = [s | {args.uroman_key: tokens} for s, tokens in zip(dataset, tokens_s)]
+    dataset = [
+        s | {args.normalized_key: normalized_tokens, args.uroman_key: uroman_tokens}
+        for s, normalized_tokens, uroman_tokens in zip(dataset, normalized_tokens_s, uroman_tokens_s)
+    ]
 
     write_jsonl(args.output_jsonl, dataset)
     LOGGER.info(f"Wrote uromanized filelist to {args.output_jsonl}")
