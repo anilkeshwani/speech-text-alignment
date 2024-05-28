@@ -6,7 +6,6 @@ from typing import Callable, TYPE_CHECKING
 
 import tqdm
 from npy_append_array import NpyAppendArray
-
 from sardalign.utils import mls_id_to_path, read_jsonl
 
 
@@ -24,7 +23,8 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO").upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger(__name__)
+
+LOGGER = logging.getLogger(__name__)
 
 
 def get_shard_range(tot: int, nshard: int, rank: int) -> tuple[int, int]:
@@ -32,7 +32,7 @@ def get_shard_range(tot: int, nshard: int, rank: int) -> tuple[int, int]:
     start = round(tot / nshard * rank)
     end = round(tot / nshard * (rank + 1))
     assert start < end, f"start={start}, end={end}"
-    logger.info(f"rank {rank} of {nshard}, process {end-start} " f"({start}-{end}) out of {tot}")
+    LOGGER.info(f"rank {rank} of {nshard}, process {end-start} " f"({start}-{end}) out of {tot}")
     return start, end
 
 
@@ -88,4 +88,4 @@ def dump_feature(
             feat = reader.get_feats(path, nsample)
             feat_f.append(feat.cpu().numpy())
             leng_f.write(f"{len(feat)}\n")
-    logger.info("finished successfully")
+    LOGGER.info("finished successfully")
