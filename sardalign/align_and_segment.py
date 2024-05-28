@@ -47,9 +47,9 @@ def generate_emissions(model: torchaudio.models.Wav2Vec2Model, audio_file: str |
     emissions = torch.cat(emissions_arr, dim=0).squeeze()
     emissions = torch.log_softmax(emissions, dim=-1)
 
-    stride = float(waveform.size(1) * 1000 / emissions.size(0) / SAMPLING_FREQ)
+    stride_ms = float(waveform.size(1) * 1000 / emissions.size(0) / SAMPLING_FREQ)  # milliseconds
 
-    return emissions, stride
+    return emissions, stride_ms
 
 
 def get_alignments(
