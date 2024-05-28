@@ -1,6 +1,8 @@
 import json
+import logging
 import os
 import platform
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
@@ -8,12 +10,22 @@ import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device
 from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict, merge_repeats, time_to_frame
 from torch import Tensor
 
+
+logging.basicConfig(
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
+    stream=sys.stdout,
+)
+
+LOGGER = logging.getLogger(__name__)
 
 DEVICE = get_device()
 TORCHAUDIO_BACKEND = "soundfile" if platform.system() == "Darwin" else None
@@ -56,17 +68,16 @@ def get_alignments(
     dictionary: dict[str, int],
     use_star: bool,
 ):
-    # Generate emissions
-    emissions, stride = generate_emissions(model, audio_file)
+    # generate emissions: log prob distributions of uroman tokens per Wav2Vec2 output frame (usually 320x downsampling)
+    emissions, stride_ms = generate_emissions(model, audio_file)
     T, N = emissions.size()
     if use_star:
-        emissions = torch.cat([emissions, torch.zeros(T, 1).to(DEVICE)], dim=1)
-
-    # Force Alignment
+        emissions = torch.cat([emissions, torch.zeros(T, 1).to(DEVICE)], dim=1)  # add star entry to dist with zero prob
+    # force alignment
     if uroman_tokens:
-        token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]
+        token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]  # TODO ??
     else:
-        print(f"Empty transcript!!!!! for audio file {audio_file}")
+        LOGGER.warning(f"Empty transcript!!!!! for audio file {audio_file}")
         token_indices = []
 
     blank = dictionary["<blank>"]
@@ -79,7 +90,7 @@ def get_alignments(
     path = path.squeeze().to("cpu").tolist()
 
     segments = merge_repeats(path, {v: k for k, v in dictionary.items()})
-    return segments, stride
+    return segments, stride_ms
 
 
 def main(args):
