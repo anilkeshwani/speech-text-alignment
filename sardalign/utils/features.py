@@ -2,25 +2,22 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Callable, TYPE_CHECKING
+from typing import Callable
 
+import fairseq
+import torch
+import torch.nn.functional as F
 import tqdm
+from fairseq.data.audio.audio_utils import get_features_or_waveform
 from npy_append_array import NpyAppendArray
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.utils import mls_id_to_path, read_jsonl
 
 
-if TYPE_CHECKING:
-    from sardalign.dump_hubert_feature import HubertFeatureReader
-else:
-    from typing import Any
-
-    HubertFeatureReader = Any
-
-
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
     stream=sys.stdout,
 )
 
@@ -69,28 +66,6 @@ def get_mls_path_iterator(
     return iterate, len(lines)
 
 
-def dump_feature(
-    reader: HubertFeatureReader, generator: Callable, num: int, split: str | int, nshard: int, rank: int, feat_dir: Path
-):
-    iterator = generator()
-
-    feat_path = feat_dir / f"{split!s}_{rank}_{nshard}.npy"
-    leng_path = feat_dir / f"{split!s}_{rank}_{nshard}.len"
-
-    feat_dir.mkdir(exist_ok=True)
-
-    if feat_path.exists():
-        raise FileExistsError(f"Existing features NumPy array at {feat_path!s}")
-
-    feat_f = NpyAppendArray(feat_path)
-    with open(leng_path, "w") as leng_f:
-        for path, nsample in tqdm.tqdm(iterator, total=num):
-            feat = reader.get_feats(path, nsample)
-            feat_f.append(feat.cpu().numpy())
-            leng_f.write(f"{len(feat)}\n")
-    LOGGER.info("finished successfully")
-
-
 class HubertFeatureReader(object):
     def __init__(self, ckpt_path, layer, max_chunk=1_600_000):
         (model, cfg, task) = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
@@ -98,8 +73,8 @@ class HubertFeatureReader(object):
         self.task = task
         self.layer = layer
         self.max_chunk = max_chunk
-        logger.info(f"TASK CONFIG:\n{self.task.cfg}")
-        logger.info(f" max_chunk = {self.max_chunk}")
+        LOGGER.info(f"TASK CONFIG:\n{self.task.cfg}")
+        LOGGER.info(f" max_chunk = {self.max_chunk}")
 
     def read_audio(self, path, ref_len=None):
         wav = get_features_or_waveform(path, need_waveform=True, use_sample_rate=self.task.cfg.sample_rate)
@@ -131,3 +106,25 @@ class HubertFeatureReader(object):
                 )
                 feat.append(feat_chunk)
         return torch.cat(feat, 1).squeeze(0)
+
+
+def dump_feature(
+    reader: HubertFeatureReader, generator: Callable, num: int, split: str | int, nshard: int, rank: int, feat_dir: Path
+):
+    iterator = generator()
+
+    feat_path = feat_dir / f"{split!s}_{rank}_{nshard}.npy"
+    leng_path = feat_dir / f"{split!s}_{rank}_{nshard}.len"
+
+    feat_dir.mkdir(exist_ok=True)
+
+    if feat_path.exists():
+        raise FileExistsError(f"Existing features NumPy array at {feat_path!s}")
+
+    feat_f = NpyAppendArray(feat_path)
+    with open(leng_path, "w") as leng_f:
+        for path, nsample in tqdm.tqdm(iterator, total=num):
+            feat = reader.get_feats(path, nsample)
+            feat_f.append(feat.cpu().numpy())
+            leng_f.write(f"{len(feat)}\n")
+    LOGGER.info("finished successfully")
