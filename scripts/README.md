@@ -44,7 +44,7 @@ rm -r /mnt/scratch-artemis/anilkeshwani/tmp/MLS/mls_english/train/audio_segmente
 HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 
 ./scripts/generate_interleaved_dataset.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_existing_files_only.jsonl" \
+    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman.jsonl" \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
     --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
     --lang 'eng' \

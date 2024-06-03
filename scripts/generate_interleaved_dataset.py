@@ -57,9 +57,15 @@ def main(args):
 
     args.out_dir.mkdir(parents=True, exist_ok=False)
 
-    dataset = read_jsonl(args.jsonl)
     if args.head is not None:
-        dataset = dataset[: args.head]
+        dataset: list[dict] = []
+        with open(args.jsonl) as f:
+            for i, line in enumerate(f):
+                if i == args.head:
+                    break
+                sample = json.loads(line)
+    else:
+        dataset = read_jsonl(args.jsonl)
     LOGGER.info(f"Read {len(dataset)} lines from {args.jsonl}")
 
     tokens_s: list[list[str]] = [
@@ -82,7 +88,7 @@ def main(args):
         norm_tokens_s = [[STAR_TOKEN] + norm_tokens for norm_tokens in norm_tokens_s]
         uroman_tokens_s = [[STAR_TOKEN] + uroman_tokens for uroman_tokens in uroman_tokens_s]
 
-    segments_s, stride_s = [], []
+    segments_s, stride_ms_s = [], []
 
     for file_id, tokens, norm_tokens, uroman_tokens in zip(file_id_s, tokens_s, norm_tokens_s, uroman_tokens_s):
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
@@ -116,9 +122,9 @@ def main(args):
                 f.write(json.dumps(sample) + "\n")
 
         segments_s.append(segments)
-        stride_s.append(stride_ms)
+        stride_ms_s.append(stride_ms)
 
-    return segments_s, stride_s
+    return segments_s, stride_ms_s
 
 
 if __name__ == "__main__":
