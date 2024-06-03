@@ -26,12 +26,11 @@ LOGGER = logging.getLogger(__name__)
 def generate_emissions(
     model: torchaudio.models.Wav2Vec2Model, audio_file: str | Path, device: torch.device
 ) -> tuple[Tensor, float]:
-    waveform, _ = torchaudio.load(audio_file)  # waveform: channels X T
+    waveform, sr = torchaudio.load(audio_file)  # waveform: channels X T
     waveform = waveform.to(device)
     total_duration = sox.file_info.duration(audio_file)  # output from bash soxi -D "$audio_file"; e.g. 15.180000
     assert total_duration is not None
-    audio_sf = sox.file_info.sample_rate(audio_file)
-    assert audio_sf == SAMPLING_FREQ
+    assert sr == SAMPLING_FREQ
     context: float = EMISSION_INTERVAL * 0.1
     emissions_arr = []
     with torch.inference_mode():
@@ -72,17 +71,13 @@ def get_alignments(
     if uroman_tokens:
         token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]  # TODO ??
     else:
-        LOGGER.warning(f"Empty transcript!!!!! for audio file {audio_file}")
+        LOGGER.warning(f"Empty transcript for audio file: {audio_file}")
         token_indices = []
-
     blank = dictionary["<blank>"]
-
     targets = torch.tensor(token_indices, dtype=torch.int32).to(device)
-
     input_lengths = torch.tensor(emissions.shape[0]).unsqueeze(-1)
     target_lengths = torch.tensor(targets.shape[0]).unsqueeze(-1)
     path, _ = F.forced_align(emissions.unsqueeze(0), targets.unsqueeze(0), input_lengths, target_lengths, blank=blank)
     path = path.squeeze().to("cpu").tolist()
-
     segments = merge_repeats(path, {v: k for k, v in dictionary.items()})
     return segments, stride_ms
