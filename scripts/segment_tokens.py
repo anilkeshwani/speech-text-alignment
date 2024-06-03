@@ -11,7 +11,7 @@ from sardalign.align import get_alignments
 from sardalign.constants import PROJECT_ROOT, STAR_TOKEN
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
-from sardalign.utils.align import get_spans, get_uroman_tokens, load_model_dict
+from sardalign.utils.align import get_spans, get_uroman_tokens, load_mms_aligner_model_and_dict
 from tqdm import tqdm
 
 
@@ -63,7 +63,7 @@ def main(args):
     for nt in tqdm(norm_transcripts_s, desc="Getting uroman tokens for transcripts"):
         tokens_s.append(get_uroman_tokens(nt, args.uroman_path, args.lang))
 
-    model, dictionary = load_model_dict()
+    model, dictionary = load_mms_aligner_model_and_dict()
     model = model.to(device)
 
     if args.use_star:

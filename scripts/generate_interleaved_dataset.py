@@ -14,7 +14,7 @@ from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import STAR_TOKEN
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
-from sardalign.utils.align import get_spans, load_model_dict
+from sardalign.utils.align import get_spans, load_mms_aligner_model_and_dict
 from tqdm import tqdm
 
 
@@ -73,7 +73,7 @@ def main(args):
         if (len(tokens) != len(norm_tokens)) or (len(tokens) != len(uroman_tokens)):
             raise ValueError(f"Found incongruous number of tokens in line {i + 1} reading from manifest {args.jsonl!s}")
 
-    model, dictionary = load_model_dict()
+    model, dictionary = load_mms_aligner_model_and_dict()
     model = model.to(device)
 
     if args.use_star:

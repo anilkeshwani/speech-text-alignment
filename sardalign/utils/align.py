@@ -92,7 +92,7 @@ def time_to_frame(time):
     return int(time * frames_per_sec)
 
 
-def load_model_dict(
+def load_mms_aligner_model_and_dict(
     model_path_name: str = CTC_ALIGNMENT_MLING_UROMAN_MODEL_PATH,
     dict_path_name: str = CTC_ALIGNMENT_MLING_UROMAN_DICT_PATH,
 ) -> tuple[Wav2Vec2Model, dict[str, int]]:
