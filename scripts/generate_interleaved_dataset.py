@@ -5,9 +5,9 @@ import logging
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from math import ceil
 from pathlib import Path
 
-import sox
 import torch
 import torchaudio
 from sardalign.align import get_alignments
@@ -97,7 +97,6 @@ def main(args):
         assert len(tokens) == len(spans), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
         outdir_segment = args.out_dir / file_id
         outdir_segment.mkdir()
-        breakpoint()
         with open(outdir_segment / "manifest.json", "x") as f:
             for i, (token, span) in enumerate(zip(tokens, spans)):
                 seg_start_idx = span[0].start
@@ -108,9 +107,9 @@ def main(args):
                 output_file = (outdir_segment / f"segment_{i}").with_suffix(".flac")
 
                 sampled_start_idx = int(audio_start_sec * SAMPLING_FREQ)
-                sampled_end_idx = int(audio_end_sec * SAMPLING_FREQ)
+                sampled_end_idx = int(ceil(audio_end_sec * SAMPLING_FREQ))
                 trimmed_waveform = wave[:, sampled_start_idx:sampled_end_idx]
-                torchaudio.save(output_file, trimmed_waveform, SAMPLING_FREQ)  # hopefully...
+                torchaudio.save(output_file, trimmed_waveform.cpu(), SAMPLING_FREQ)
 
                 sample = {
                     "audio_start_sec": audio_start_sec,
