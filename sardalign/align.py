@@ -9,7 +9,7 @@ import torchaudio
 import torchaudio.functional as F
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
-from sardalign.utils.align import merge_repeats, time_to_frame
+from sardalign.utils.align import merge_repeats, Segment, time_to_frame
 from torch import Tensor
 
 
@@ -24,13 +24,18 @@ LOGGER = logging.getLogger(__name__)
 
 
 def generate_emissions(
-    model: torchaudio.models.Wav2Vec2Model, audio_file: str | Path, device: torch.device
-) -> tuple[Tensor, float]:
+    model: torchaudio.models.Wav2Vec2Model,
+    audio_file: str | Path,
+    device: torch.device,
+    check_sampling_rate: int | None = SAMPLING_FREQ,
+) -> tuple[Tensor, float, Tensor]:
     waveform, sr = torchaudio.load(audio_file)  # waveform: channels X T
     waveform = waveform.to(device)
     total_duration = sox.file_info.duration(audio_file)  # output from bash soxi -D "$audio_file"; e.g. 15.180000
-    assert total_duration is not None
-    assert sr == SAMPLING_FREQ
+    if total_duration is None:
+        raise RuntimeError(f"Could not determine duration of audio file: {audio_file!s}")
+    if check_sampling_rate and (sr != SAMPLING_FREQ):
+        raise RuntimeError(f"Expected sampling rate {check_sampling_rate:,}, found: {sr:,} for {audio_file!s}")
     context: float = EMISSION_INTERVAL * 0.1
     emissions_arr = []
     with torch.inference_mode():
@@ -51,7 +56,7 @@ def generate_emissions(
     emissions = torch.cat(emissions_arr, dim=0).squeeze()
     emissions = torch.log_softmax(emissions, dim=-1)
     stride_ms = float(waveform.size(1) * 1000 / emissions.size(0) / SAMPLING_FREQ)  # milliseconds
-    return emissions, stride_ms
+    return emissions, stride_ms, waveform
 
 
 def get_alignments(
@@ -61,9 +66,9 @@ def get_alignments(
     dictionary: dict[str, int],
     use_star: bool,
     device: torch.device,
-):
+) -> tuple[list[Segment], float, Tensor]:
     # generate emissions: log prob distributions of uroman tokens per Wav2Vec2 output frame (usually 320x downsampling)
-    emissions, stride_ms = generate_emissions(model, audio_file, device)
+    emissions, stride_ms, waveform = generate_emissions(model, audio_file, device)
     T, N = emissions.size()
     if use_star:
         emissions = torch.cat([emissions, torch.zeros(T, 1).to(device)], dim=1)  # add star entry to dist with zero prob
@@ -80,4 +85,4 @@ def get_alignments(
     path, _ = F.forced_align(emissions.unsqueeze(0), targets.unsqueeze(0), input_lengths, target_lengths, blank=blank)
     path = path.squeeze().to("cpu").tolist()
     segments = merge_repeats(path, {v: k for k, v in dictionary.items()})
-    return segments, stride_ms
+    return segments, stride_ms, waveform

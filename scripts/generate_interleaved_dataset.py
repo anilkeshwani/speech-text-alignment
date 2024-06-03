@@ -12,7 +12,7 @@ import torch
 import torchaudio
 from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import STAR_TOKEN
+from sardalign.constants import SAMPLING_FREQ, STAR_TOKEN
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, load_mms_aligner_model_and_dict
 from tqdm import tqdm
@@ -63,7 +63,7 @@ def main(args):
             for i, line in enumerate(f):
                 if i == args.head:
                     break
-                sample = json.loads(line)
+                dataset.append(json.loads(line))
     else:
         dataset = read_jsonl(args.jsonl)
     LOGGER.info(f"Read {len(dataset)} lines from {args.jsonl}")
@@ -92,24 +92,25 @@ def main(args):
 
     for file_id, tokens, norm_tokens, uroman_tokens in zip(file_id_s, tokens_s, norm_tokens_s, uroman_tokens_s):
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
-        segments, stride_ms = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star, device)
+        segments, stride_ms, wave = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star, device)
         spans = get_spans(uroman_tokens, segments)
+        assert len(tokens) == len(spans), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
         outdir_segment = args.out_dir / file_id
         outdir_segment.mkdir()
+        breakpoint()
         with open(outdir_segment / "manifest.json", "x") as f:
-            for i, token in enumerate(tokens):
-                span = spans[i]
+            for i, (token, span) in enumerate(zip(tokens, spans)):
                 seg_start_idx = span[0].start
                 seg_end_idx = span[-1].end
-
                 audio_start_sec = seg_start_idx * stride_ms / 1000
                 audio_end_sec = seg_end_idx * stride_ms / 1000
 
                 output_file = (outdir_segment / f"segment_{i}").with_suffix(".flac")
 
-                tfm = sox.Transformer()
-                tfm.trim(audio_start_sec, audio_end_sec)
-                tfm.build_file(audio_path, output_file)
+                sampled_start_idx = int(audio_start_sec * SAMPLING_FREQ)
+                sampled_end_idx = int(audio_end_sec * SAMPLING_FREQ)
+                trimmed_waveform = wave[:, sampled_start_idx:sampled_end_idx]
+                torchaudio.save(output_file, trimmed_waveform, SAMPLING_FREQ)  # hopefully...
 
                 sample = {
                     "audio_start_sec": audio_start_sec,
