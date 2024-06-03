@@ -8,13 +8,16 @@ from argparse import ArgumentParser, Namespace
 from math import ceil
 from pathlib import Path
 
+import fairseq
 import torch
+import torch.nn.functional as F
 import torchaudio
 from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ, STAR_TOKEN
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, load_mms_aligner_model_and_dict
+from torch import Tensor
 from tqdm import tqdm
 
 
@@ -49,6 +52,27 @@ def parse_args() -> Namespace:
     parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
     args = parser.parse_args()
     return args
+
+
+class SimpleHubertFeaturizer:
+    def __init__(self, ckpt_path: str, layer: int, device: torch.device, max_len: int = 100 * SAMPLING_FREQ):
+        model, cfg, task = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
+        self.model = model[0].eval().to(device)
+        self.task: fairseq.tasks.hubert_pretraining.HubertPretrainingTask = task
+        self.layer = layer
+        self.max_len = max_len
+        LOGGER.info(f"Task config:\n{self.task.cfg}")
+        LOGGER.info(f"Maximum length: {self.max_len}")
+
+    def get_feats(self, x: Tensor):
+        if x.size(1) > self.max_len:
+            raise ValueError(f"Audio length {x.size(1)} exceeds maximum length {self.max_len}")
+        with torch.no_grad():
+            if self.task.cfg.normalize:  # True for pre-trained HuBERT Large (w/ embed_dim = 1_024)
+                x = F.layer_norm(x, x.shape)
+            x = x.view(1, -1)
+            feat, _ = self.model.extract_features(source=x, padding_mask=None, mask=False, output_layer=self.layer)
+        return feat.squeeze(0)
 
 
 def main(args):
