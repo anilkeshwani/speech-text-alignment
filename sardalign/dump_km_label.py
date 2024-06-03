@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -18,7 +19,7 @@ logger = logging.getLogger("dump_km_label")
 
 
 class ApplyKmeans(object):
-    def __init__(self, km_path):
+    def __init__(self, km_path: Path):
         self.km_model = joblib.load(km_path)
         self.C_np = self.km_model.cluster_centers_.transpose()
         self.Cnorm_np = (self.C_np**2).sum(0, keepdims=True)

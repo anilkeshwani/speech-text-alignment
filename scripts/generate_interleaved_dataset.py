@@ -15,6 +15,7 @@ import torchaudio
 from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ, STAR_TOKEN
+from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, load_mms_aligner_model_and_dict
 from torch import Tensor
@@ -37,6 +38,8 @@ def parse_args() -> Namespace:
     parser.add_argument("--audio-dir", type=Path, help="Path to audio directory")
     parser.add_argument("--suffix", type=str, default=".flac", help="File extension for audio files")
     parser.add_argument("--out-dir", type=Path, required=True, help="Output directory for segmented audio files")
+    parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
+    # MMS Aligner parameters
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("--text-key", type=str, default="transcript", help="Key of text field in JSON lines manifest")
     parser.add_argument("--normalized-key", type=str, default="normalized", help="Key for normalized tokens")
@@ -48,8 +51,13 @@ def parse_args() -> Namespace:
         help="Token delimiter as used by str.split; defaults to None, i.e. splits on any whitespace",
     )
     parser.add_argument("--use-star", action="store_true", help="Use star at the start of transcript")
+    # HuBERT parameters
+    parser.add_argument("--hubert-ckpt-path", type=str, required=True, help="Path to HuBERT checkpoint")
+    parser.add_argument("--layer", type=int, required=True, help="Layer of the HuBERT model to use")
+    # k-means parameters
+    parser.add_argument("--km-ckpt-path", type=Path, required=True, help="Path to k-means (joblib) serialised model")
+    # Hardware parameters
     parser.add_argument("--device", type=str, default=None, help="Torch device; in string format")
-    parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
     args = parser.parse_args()
     return args
 
@@ -73,10 +81,8 @@ class SimpleHubertFeaturizer:
         self.task: fairseq.tasks.hubert_pretraining.HubertPretrainingTask = task
         self.layer = layer
         self.max_len = max_len
-        LOGGER.info(f"Task config:\n{self.task.cfg}")
-        LOGGER.info(f"Maximum length: {self.max_len}")
 
-    def get_feats(self, x: Tensor):
+    def __call__(self, x: Tensor):
         """
         Extracts features from the given audio tensor using the pre-trained HuBERT model.
 
@@ -88,13 +94,6 @@ class SimpleHubertFeaturizer:
 
         Raises:
             ValueError: If the audio length exceeds the maximum length specified.
-
-        Notes:
-            - The audio tensor is expected to have a shape of (channel, time).
-            - The pre-trained HuBERT model is used for feature extraction.
-            - The specified layer of the model is used to extract features.
-            - If the task configuration specifies normalization, the input audio tensor is normalized using layer normalization.
-            - The extracted features are squeezed to remove the batch dimension.
         """
         if x.size(1) > self.max_len:
             raise ValueError(f"Audio length {x.size(1)} exceeds maximum length {self.max_len}")
@@ -134,20 +133,29 @@ def main(args):
         if (len(tokens) != len(norm_tokens)) or (len(tokens) != len(uroman_tokens)):
             raise ValueError(f"Found incongruous number of tokens in line {i + 1} reading from manifest {args.jsonl!s}")
 
-    model, dictionary = load_mms_aligner_model_and_dict()
-    model = model.to(device)
+    # load MMS alignment model and respective dictionary
+    mms_aligner_model, mms_aligner_dict = load_mms_aligner_model_and_dict()
+    mms_aligner_model = mms_aligner_model.to(device)
 
     if args.use_star:
-        dictionary[STAR_TOKEN] = len(dictionary)
+        mms_aligner_dict[STAR_TOKEN] = len(mms_aligner_dict)
         tokens_s = [[STAR_TOKEN] + tokens for tokens in tokens_s]
         norm_tokens_s = [[STAR_TOKEN] + norm_tokens for norm_tokens in norm_tokens_s]
         uroman_tokens_s = [[STAR_TOKEN] + uroman_tokens for uroman_tokens in uroman_tokens_s]
+
+    # Load HuBERT model via featurizer
+    hubert_featurizer = SimpleHubertFeaturizer(ckpt_path=args.hubert_ckpt_path, layer=args.layer, device=device)
+
+    # Load k-means model
+    kmeans = ApplyKmeans(args.km_ckpt_path)
 
     segments_s, stride_ms_s = [], []
 
     for file_id, tokens, norm_tokens, uroman_tokens in zip(file_id_s, tokens_s, norm_tokens_s, uroman_tokens_s):
         audio_path = mls_id_to_path(file_id, audio_dir=args.audio_dir, suffix=args.suffix)
-        segments, stride_ms, wave = get_alignments(audio_path, uroman_tokens, model, dictionary, args.use_star, device)
+        segments, stride_ms, wave = get_alignments(
+            audio_path, uroman_tokens, mms_aligner_model, mms_aligner_dict, args.use_star, device
+        )
         spans = get_spans(uroman_tokens, segments)
         assert len(tokens) == len(spans), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
         outdir_segment = args.out_dir / file_id
@@ -164,7 +172,8 @@ def main(args):
                 sampled_start_idx = int(audio_start_sec * SAMPLING_FREQ)
                 sampled_end_idx = int(ceil(audio_end_sec * SAMPLING_FREQ))
                 trimmed_waveform = wave[:, sampled_start_idx:sampled_end_idx]
-                torchaudio.save(output_file, trimmed_waveform.cpu(), SAMPLING_FREQ)
+                hubert_features = hubert_featurizer(trimmed_waveform)
+                speech_tokens = kmeans(hubert_features).tolist()
 
                 sample = {
                     "audio_start_sec": audio_start_sec,
@@ -173,6 +182,7 @@ def main(args):
                     "text": token,
                     "normalized_text": norm_tokens[i],
                     "uroman_tokens": uroman_tokens[i],
+                    "speech_tokens": speech_tokens,
                 }
                 f.write(json.dumps(sample) + "\n")
 

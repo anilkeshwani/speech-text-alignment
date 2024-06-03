@@ -48,6 +48,9 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
     --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
     --lang 'eng' \
+    --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
+    --layer 22 \
+    --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000' \
     --head 10
 ```
 
