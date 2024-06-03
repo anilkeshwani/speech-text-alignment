@@ -1,6 +1,8 @@
 # To Do
 
 - [ ] Check that scripts/dump_hubert_features.py still returns _identical_ outputs to the original fairseq script
+- [ ] For HuBERT feature generation, perform a check that HuBERT features are identical when taking in a (segmented) audio written to disk via sox.Transformer.build_file() as compared to the waveforms that I use which are read from torchaudio.load
+    - Reading the source code of HuBERT shows the feature dumper uses `fairseq.data.audio.audio_utils.get_waveform` to obtain normalized waveforms given the default arguments c.f. the MMS alignment code which uses the `load` function returned by `torchaudio._backend.utils.get_load_func`
 
 ## Improvements
 
