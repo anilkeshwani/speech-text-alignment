@@ -11,7 +11,7 @@ import torch
 import torchaudio
 from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import STAR_TOKEN
+from sardalign.constants import ALIGNMENT_KEY, SPEECH_TOKENS_KEY, STAR_TOKEN
 from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import count_lines, echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_span_times, get_spans, load_mms_aligner_model_and_dict
@@ -43,6 +43,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
     # MMS Aligner parameters
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
+    # TODO remove the keys are argparse arguments and move them into constants, like speech tokens and alignment keys
     parser.add_argument("--text-key", type=str, default="transcript", help="Key of text field in JSON lines manifest")
     parser.add_argument("--normalized-key", type=str, default="normalized", help="Key for normalized tokens")
     parser.add_argument("--uroman-key", type=str, default="uroman", help="Key for uroman tokens in JSON lines manifest")
@@ -124,8 +125,8 @@ def main(args):
             assert len(tokens) == len(
                 spans
             ), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
-            sample |= {"speech_tokens": kmeans(hubert_featurizer(wave)).tolist()}
-            sample |= {"alignment": {token: get_span_times(span, stride_ms) for (token, span) in zip(tokens, spans)}}
+            sample |= {SPEECH_TOKENS_KEY: kmeans(hubert_featurizer(wave)).tolist()}
+            sample |= {ALIGNMENT_KEY: {token: get_span_times(span, stride_ms) for (token, span) in zip(tokens, spans)}}
             f.write(json.dumps(sample) + "\n")
 
     LOGGER.info(f"Wrote {count_lines(args.out_jsonl)} lines to {args.out_jsonl!s}")

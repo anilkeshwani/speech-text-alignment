@@ -34,14 +34,16 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
     --head 10
 ```
 
-## Generating Interleaved Datasets
+## Generating Datasets with Alignments and HuBERT Speech Tokens
+
+Alignment and encoding of audio into HuBERT speech tokens is performed in a single script to reduce overhead. 
 
 **WIP call - testing**:
 
 ```bash
 HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 
-./scripts/generate_interleaved_dataset.py \
+./scripts/align_and_hubert_encode.py \
     --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman.jsonl" \
     --out-jsonl "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert.jsonl" \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio"          \
@@ -52,36 +54,14 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
     --head 1000
 ```
 
+### Generated Interleaved Speech-Text Datasets
 
 ```bash
-#!/usr/bin/env bash
+HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 
-set -euo pipefail
-
-HAFH='/mnt/scratch-artemis/anilkeshwani' # your "${HOME}" away from "${HOME}"
-
-interleave_py_executable="${HAFH}/speech-text-alignment/sardalign/interleave.py"
-jsonl="${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl"
-audio_dir="${HAFH}/data/MLS/mls_english/dev/audio"
-lang='eng'
-output_dir="${HAFH}/tmp/MLS/mls_english/dev/audio_segmented"
-
-# HuBERT
-ckpt_path='/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt'
-layer='6'
-
-# K-means
-km_path="${HOME}/tmp/hubert_kmeans_test/kmeans_model.joblib"
-
-python "${interleave_py_executable}" \
-    --jsonl "$jsonl" \
-    --audio-dir "$audio_dir" \
-    --out-dir "$output_dir" \
-    --lang "$lang" \
-    --ckpt-path "$ckpt_path" \
-    --layer "$layer" \
-    --km-path "$km_path" \
-    --sample 10
+./scripts/generate_interleaved_data.py \
+    "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert.jsonl" \
+    --output-jsonl "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert_interleaved.jsonl"
 ```
 
 ### Resample an Audio File (single file; Python)

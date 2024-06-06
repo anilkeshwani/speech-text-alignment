@@ -5,6 +5,7 @@ import re
 import sys
 import tempfile
 from dataclasses import dataclass
+from math import ceil
 
 import torch
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
@@ -213,3 +214,12 @@ def get_span_times(span: list[Segment], stride_ms: float) -> tuple[float, float]
     audio_start_sec = seg_start_idx * stride_ms / 1000
     audio_end_sec = seg_end_idx * stride_ms / 1000
     return audio_start_sec, audio_end_sec
+
+
+def span_times_to_hubert_idxs(
+    times: tuple[float, float], sampling_rate: int, downsampling_ratio: int
+) -> tuple[int, int]:
+    span_start_sec, span_end_sec = times
+    start_idx = int(span_start_sec * sampling_rate / downsampling_ratio)
+    end_idx = int(ceil(span_end_sec * sampling_rate / downsampling_ratio))
+    return start_idx, end_idx

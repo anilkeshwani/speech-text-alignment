@@ -15,3 +15,8 @@ CTC_ALIGNMENT_MLING_UROMAN_DICT_PATH: str = "/tmp/ctc_alignment_mling_uroman_mod
 
 # HuBERT
 HUBERT_DOWNSAMPLING_RATIO: int = 320
+
+# Dataset Processing
+SPEECH_TOKENS_KEY: str = "speech_tokens"  # key for speech tokens in JSON lines manifests
+ALIGNMENT_KEY: str = "alignment"  # key for text token-audio alignments in JSON lines manifests
+HUBERT_TOKEN_FSTRING: str = "<extra_id_{}>"
