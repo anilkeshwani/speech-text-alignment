@@ -12,3 +12,6 @@ EMISSION_INTERVAL: int = 30
 STAR_TOKEN: str = "<star>"
 CTC_ALIGNMENT_MLING_UROMAN_MODEL_PATH: str = "/tmp/ctc_alignment_mling_uroman_model.pt"
 CTC_ALIGNMENT_MLING_UROMAN_DICT_PATH: str = "/tmp/ctc_alignment_mling_uroman_model.dict"
+
+# HuBERT
+HUBERT_DOWNSAMPLING_RATIO: int = 320
