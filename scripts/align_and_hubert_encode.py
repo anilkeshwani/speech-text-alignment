@@ -7,17 +7,15 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-import fairseq
 import torch
-import torch.nn.functional as F
 import torchaudio
 from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import SAMPLING_FREQ, STAR_TOKEN
+from sardalign.constants import STAR_TOKEN
 from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import count_lines, echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_span_times, get_spans, load_mms_aligner_model_and_dict
-from torch import Tensor
+from sardalign.utils.features import SimpleHubertFeaturizer
 from tqdm import tqdm
 
 
@@ -66,49 +64,6 @@ def parse_args() -> Namespace:
     if args.out_jsonl is None:
         args.out_jsonl = args.jsonl.with_stem(args.jsonl.stem + "_aligned_hubert")
     return args
-
-
-class SimpleHubertFeaturizer:
-    def __init__(self, ckpt_path: str, layer: int, device: torch.device, max_len: int = 100 * SAMPLING_FREQ):
-        """
-        Initializes a new instance of the `SimpleHubertFeaturizer` class.
-
-        Args:
-            ckpt_path (str): The path to the checkpoint file.
-            layer (int): The layer of the model to use.
-            device (torch.device): The device to use for inference.
-            max_len (int, optional): The maximum length of the input sequence. Defaults to 100 * SAMPLING_FREQ, or 100s.
-
-        Returns:
-            None
-        """
-        model, cfg, task = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
-        self.model = model[0].eval().to(device)
-        self.task: fairseq.tasks.hubert_pretraining.HubertPretrainingTask = task
-        self.layer = layer
-        self.max_len = max_len
-
-    def __call__(self, x: Tensor):
-        """
-        Extracts features from the given audio tensor using the pre-trained HuBERT model.
-
-        Args:
-            x (torch.Tensor): The audio tensor of shape (channel, time).
-
-        Returns:
-            torch.Tensor: The extracted features of shape (feature_dim,).
-
-        Raises:
-            ValueError: If the audio length exceeds the maximum length specified.
-        """
-        if x.size(1) > self.max_len:
-            raise ValueError(f"Audio length {x.size(1)} exceeds maximum length {self.max_len}")
-        with torch.no_grad():
-            if self.task.cfg.normalize:  # True for pre-trained HuBERT Large (w/ embed_dim = 1_024)
-                x = F.layer_norm(x, x.shape)
-            x = x.view(1, -1)
-            feat, _ = self.model.extract_features(source=x, padding_mask=None, mask=False, output_layer=self.layer)
-        return feat.squeeze(0)
 
 
 def main(args):
