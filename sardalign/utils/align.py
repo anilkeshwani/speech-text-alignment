@@ -195,3 +195,11 @@ def get_spans(tokens, segments):
                 span = span + [Segment(sil, span[-1].end, pad_end)]
         spans.append(span)
     return spans
+
+
+def get_span_endpoints_seconds(span: list[Segment], stride_ms: int) -> tuple[float, float]:
+    seg_start_idx = span[0].start
+    seg_end_idx = span[-1].end
+    audio_start_sec = seg_start_idx * stride_ms / 1000
+    audio_end_sec = seg_end_idx * stride_ms / 1000
+    return audio_start_sec, audio_end_sec
