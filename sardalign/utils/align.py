@@ -197,7 +197,17 @@ def get_spans(tokens, segments):
     return spans
 
 
-def get_span_endpoints_seconds(span: list[Segment], stride_ms: float) -> tuple[float, float]:
+def get_span_times(span: list[Segment], stride_ms: float) -> tuple[float, float]:
+    """
+    Calculate the start and end times of a span in seconds.
+
+    Args:
+        span (list[Segment]): A list of Segment objects representing the span.
+        stride_ms (float): The stride in milliseconds.
+
+    Returns:
+        tuple[float, float]: A tuple containing the start and end times of the span in seconds.
+    """
     seg_start_idx = span[0].start
     seg_end_idx = span[-1].end
     audio_start_sec = seg_start_idx * stride_ms / 1000
