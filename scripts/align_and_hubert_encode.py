@@ -5,18 +5,15 @@ import logging
 import os
 import sys
 from argparse import ArgumentParser, Namespace
-from itertools import zip_longest
-from math import ceil
 from pathlib import Path
 
 import fairseq
-import sox
 import torch
 import torch.nn.functional as F
 import torchaudio
 from sardalign.align import get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import HUBERT_DOWNSAMPLING_RATIO, SAMPLING_FREQ, STAR_TOKEN
+from sardalign.constants import SAMPLING_FREQ, STAR_TOKEN
 from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import count_lines, echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_span_times, get_spans, load_mms_aligner_model_and_dict
