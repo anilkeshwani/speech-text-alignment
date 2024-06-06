@@ -197,7 +197,7 @@ def get_spans(tokens, segments):
     return spans
 
 
-def get_span_endpoints_seconds(span: list[Segment], stride_ms: int) -> tuple[float, float]:
+def get_span_endpoints_seconds(span: list[Segment], stride_ms: float) -> tuple[float, float]:
     seg_start_idx = span[0].start
     seg_end_idx = span[-1].end
     audio_start_sec = seg_start_idx * stride_ms / 1000
