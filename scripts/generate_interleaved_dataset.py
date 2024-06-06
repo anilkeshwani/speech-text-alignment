@@ -5,10 +5,12 @@ import logging
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from itertools import zip_longest
 from math import ceil
 from pathlib import Path
 
 import fairseq
+import sox
 import torch
 import torch.nn.functional as F
 import torchaudio
@@ -18,6 +20,7 @@ from sardalign.constants import SAMPLING_FREQ, STAR_TOKEN
 from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, load_mms_aligner_model_and_dict
+from sardalign.utils.features import HubertFeatureReader
 from torch import Tensor
 from tqdm import tqdm
 
@@ -146,6 +149,9 @@ def main(args):
     # Load HuBERT model via featurizer
     hubert_featurizer = SimpleHubertFeaturizer(ckpt_path=args.hubert_ckpt_path, layer=args.layer, device=device)
 
+    # Cross-check that the fairseq HuBERT feature reader provides the same features as the re-implementation
+    hubert_feature_reader = HubertFeatureReader(ckpt_path=args.hubert_ckpt_path, layer=args.layer)
+
     # Load k-means model
     kmeans = ApplyKmeans(args.km_ckpt_path)
 
@@ -158,6 +164,31 @@ def main(args):
         )
         spans = get_spans(uroman_tokens, segments)
         assert len(tokens) == len(spans), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
+
+        speech_tokens_segment = kmeans(hubert_featurizer(wave)).tolist()
+        speech_tokens_segment_orig = kmeans(hubert_feature_reader.get_feats(str(audio_path))).tolist()
+
+        _mismatches = 0
+        if speech_tokens_segment != speech_tokens_segment_orig:
+            for _i, (s_mine, s_orig) in enumerate(
+                zip_longest(speech_tokens_segment, speech_tokens_segment_orig, fillvalue=None)
+            ):
+                if s_mine != s_orig:
+                    print(f"{(s_mine, s_orig)!r} <--")
+                    _mismatches += 1
+                else:
+                    print((s_mine, s_orig))
+            breakpoint()
+        
+        _n1 = len(speech_tokens_segment)
+        _n2 = len(speech_tokens_segment_orig)
+        if _n1 != _n2:
+            print(f"Speech token sequences are not the same length!! Reimpl. has {_n1} vs {_n2} in orig. fairseq")
+        print(f"{_mismatches} mismatches, out of {_n2}")
+
+
+
+"""
         outdir_segment = args.out_dir / file_id
         outdir_segment.mkdir()
         with open(outdir_segment / "manifest.json", "x") as f:
@@ -175,6 +206,26 @@ def main(args):
                 hubert_features = hubert_featurizer(trimmed_waveform)
                 speech_tokens = kmeans(hubert_features).tolist()
 
+                # tfm = sox.Transformer()
+                # tfm.trim(audio_start_sec, audio_end_sec)
+                # tfm.build_file(audio_path, output_file)
+
+                # speech_tokens_original = kmeans(hubert_feature_reader.get_feats(output_file)).tolist()
+
+                # if speech_tokens != speech_tokens_original:
+                #     _mismatches = 0
+                #     for _i, (s_mine, s_orig) in enumerate(
+                #         zip_longest(speech_tokens, speech_tokens_original, fillvalue=None)
+                #     ):
+                #         if s_mine != s_orig:
+                #             print(f"{(s_mine, s_orig)!r} <--")
+                #             _mismatches += 1
+                #         else:
+                #             print((s_mine, s_orig))
+                #     print(f"{_mismatches} mismatches, out of {_i+1}")
+
+                #     breakpoint()
+
                 sample = {
                     "audio_start_sec": audio_start_sec,
                     "audio_filepath": str(output_file),
@@ -190,7 +241,7 @@ def main(args):
         stride_ms_s.append(stride_ms)
 
     return segments_s, stride_ms_s
-
+"""
 
 if __name__ == "__main__":
     args = parse_args()

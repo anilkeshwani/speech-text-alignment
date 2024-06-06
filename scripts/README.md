@@ -39,19 +39,18 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
 **WIP call - testing**:
 
 ```bash
-rm -r /mnt/scratch-artemis/anilkeshwani/tmp/MLS/mls_english/train/audio_segmented
-
 HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 
-./scripts/generate_interleaved_dataset.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman.jsonl" \
-    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
-    --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
-    --lang 'eng' \
-    --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
-    --layer 22 \
-    --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000' \
-    --head 10
+rm -r /mnt/scratch-artemis/anilkeshwani/tmp/MLS/mls_english/train/audio_segmented && 
+    ./scripts/generate_interleaved_dataset.py \
+        --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman.jsonl" \
+        --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
+        --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
+        --lang 'eng' \
+        --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
+        --layer 22 \
+        --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000' \
+        --head 10
 ```
 
 
