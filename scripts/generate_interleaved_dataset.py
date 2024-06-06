@@ -166,31 +166,7 @@ def main(args):
         assert len(tokens) == len(spans), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
 
         speech_tokens_segment = kmeans(hubert_featurizer(wave)).tolist()
-        speech_tokens_segment_orig = kmeans(hubert_feature_reader.get_feats(str(audio_path))).tolist()
 
-        _mismatches = 0
-        if speech_tokens_segment != speech_tokens_segment_orig:
-            for _i, (s_mine, s_orig) in enumerate(
-                zip_longest(speech_tokens_segment, speech_tokens_segment_orig, fillvalue=None)
-            ):
-                if s_mine != s_orig:
-                    print(f"{(s_mine, s_orig)!r} <--")
-                    _mismatches += 1
-                else:
-                    print((s_mine, s_orig))
-            breakpoint()
-        
-        _n1 = len(speech_tokens_segment)
-        _n2 = len(speech_tokens_segment_orig)
-        if _n1 != _n2:
-            print(f"Speech token sequences are not the same length!! Reimpl. has {_n1} vs {_n2} in orig. fairseq")
-        print(f"{_mismatches} mismatches, out of {_n2}")
-
-
-
-"""
-        outdir_segment = args.out_dir / file_id
-        outdir_segment.mkdir()
         with open(outdir_segment / "manifest.json", "x") as f:
             for i, (token, span) in enumerate(zip(tokens, spans)):
                 seg_start_idx = span[0].start
@@ -198,37 +174,14 @@ def main(args):
                 audio_start_sec = seg_start_idx * stride_ms / 1000
                 audio_end_sec = seg_end_idx * stride_ms / 1000
 
-                output_file = (outdir_segment / f"segment_{i}").with_suffix(".flac")
-
                 sampled_start_idx = int(audio_start_sec * SAMPLING_FREQ)
                 sampled_end_idx = int(ceil(audio_end_sec * SAMPLING_FREQ))
                 trimmed_waveform = wave[:, sampled_start_idx:sampled_end_idx]
                 hubert_features = hubert_featurizer(trimmed_waveform)
                 speech_tokens = kmeans(hubert_features).tolist()
 
-                # tfm = sox.Transformer()
-                # tfm.trim(audio_start_sec, audio_end_sec)
-                # tfm.build_file(audio_path, output_file)
-
-                # speech_tokens_original = kmeans(hubert_feature_reader.get_feats(output_file)).tolist()
-
-                # if speech_tokens != speech_tokens_original:
-                #     _mismatches = 0
-                #     for _i, (s_mine, s_orig) in enumerate(
-                #         zip_longest(speech_tokens, speech_tokens_original, fillvalue=None)
-                #     ):
-                #         if s_mine != s_orig:
-                #             print(f"{(s_mine, s_orig)!r} <--")
-                #             _mismatches += 1
-                #         else:
-                #             print((s_mine, s_orig))
-                #     print(f"{_mismatches} mismatches, out of {_i+1}")
-
-                #     breakpoint()
-
                 sample = {
                     "audio_start_sec": audio_start_sec,
-                    "audio_filepath": str(output_file),
                     "duration": audio_end_sec - audio_start_sec,
                     "text": token,
                     "normalized_text": norm_tokens[i],
