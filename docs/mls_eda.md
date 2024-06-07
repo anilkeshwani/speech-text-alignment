@@ -4,10 +4,12 @@
 
 Summary and descriptive statistics about the ~25% stratified sample taken of MLS for experiments (_transcripts_stratified_sample_2702009.jsonl_).
 
-Mean sequence length: 39.43
-Std dev. of sequence length: 10.32
+### Text
 
-Sequence length quantiles:
+Mean sequence length in tokens: 39.43
+Std dev. of sequence length in tokens: 10.32
+
+Sequence length quantiles (tokens):
 - 0.001: 14.0
 - 0.01: 20.0
 - 0.25: 32.0
@@ -16,4 +18,20 @@ Sequence length quantiles:
 - 0.99: 65.0
 - 0.999: 74.0
 
-![Histogram of sequence lengths of MLS](/docs/assets/mls_strat_sample_seq_lengths_histogram.png)
+![MLS Stratified Sample: Histogram of text sequence lengths in tokens](/docs/assets/mls_strat_sample_seq_lengths_histogram.png)
+
+### Audio
+
+Mean audio duration (seconds): 14.88
+Std dev. of audio duration (seconds): 2.79
+
+Audio duration quantiles:
+- 0.001: 10.01
+- 0.01: 10.1
+- 0.25: 12.51
+- 0.5: 14.82
+- 0.75: 17.21
+- 0.99: 19.88
+- 0.999: 20.0
+
+![MLS Stratified Sample: Histogram of audio durations in seconds - MLS](/docs/assets/mls_strat_sample_audio_lengths_histogram.png)
