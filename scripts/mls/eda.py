@@ -145,6 +145,7 @@ def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, assets_
     speaker_quantiles = {k: v for k, v in zip(probs, np.quantile(speaker_distn, probs))}
     LOGGER.info(f"Speaker summary statistics for {jsonl_path!s}:")
     LOGGER.info(f"Speaker quantiles / samples: \n{pformat(speaker_quantiles)}")
+    LOGGER.info(f"Total number of speakers: {len(speaker_cntr):,}")
     LOGGER.info(f"Mean number of samples by speaker: {np.mean(speaker_distn):,.2f}")
     LOGGER.info(f"Std dev. of number of samples by speaker: {np.std(speaker_distn):,.2f}")
 

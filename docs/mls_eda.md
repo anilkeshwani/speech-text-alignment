@@ -6,7 +6,7 @@ Summary and descriptive statistics about the ~25% stratified sample taken of MLS
 
 ### Text
 
-Mean sequence length in tokens: 39.43
+Mean sequence length in tokens: 39.43  
 Std dev. of sequence length in tokens: 10.32
 
 Sequence length quantiles (tokens):
@@ -22,7 +22,7 @@ Sequence length quantiles (tokens):
 
 ### Audio
 
-Mean audio duration (seconds): 14.88
+Mean audio duration (seconds): 14.88  
 Std dev. of audio duration (seconds): 2.79
 
 Audio duration quantiles:
@@ -38,7 +38,8 @@ Audio duration quantiles:
 
 ### Speaker Distribution
 
-Mean number of samples by speaker: 492.17
+Number of speakers: 5,490  
+Mean number of samples by speaker: 492.17  
 Std dev. of number of samples by speaker: 754.98
 
 Speaker quantiles / samples: 
