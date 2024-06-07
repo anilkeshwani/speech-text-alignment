@@ -57,11 +57,21 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
 ### Generated Interleaved Speech-Text Datasets
 
 ```bash
-HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
+HAFH='/mnt/scratch-artemis/anilkeshwani'
 
 ./scripts/generate_interleaved_data.py \
     "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert.jsonl" \
     --output-jsonl "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert_interleaved.jsonl"
+```
+
+### MLS EDA
+
+```bash
+HAFH='/mnt/scratch-artemis/anilkeshwani'
+./scripts/mls/eda.py \
+    /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_2702009.jsonl \
+    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
+    --hist-dir "${HAFH}/speech-text-alignment/docs/assets/"
 ```
 
 ### Resample an Audio File (single file; Python)
