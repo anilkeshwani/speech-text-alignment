@@ -35,3 +35,21 @@ Audio duration quantiles:
 - 0.999: 20.0
 
 ![MLS Stratified Sample: Histogram of audio durations in seconds - MLS](/docs/assets/mls_strat_sample_audio_lengths_histogram.png)
+
+### Speaker Distribution
+
+Mean number of samples by speaker: 492.17
+Std dev. of number of samples by speaker: 754.98
+
+Speaker quantiles / samples: 
+- 0.001: 1.0
+- 0.01: 2.0
+- 0.25: 41.0
+- 0.5: 135.0
+- 0.75: 473.0
+- 0.99: 2352.0
+- 0.999: 2352.0
+
+The full speaker distribution for the stratified sample is available under [assets/mls_strat_sample_speaker_distribution.json](/docs/assets/mls_strat_sample_speaker_distribution.json). 
+
+![MLS Stratified Sample: Barplot of speaker distribution / samples](/docs/assets/mls_strat_sample_speaker_distribution.png)

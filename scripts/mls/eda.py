@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import logging
 import multiprocessing as mp
 import os
@@ -31,6 +32,8 @@ LOGGER = logging.getLogger(__file__)
 
 TEXT_SEQ_LENS_HIST_PNG_NAME = "mls_strat_sample_seq_lengths_histogram.png"
 AUDIO_DURATIONS_HIST_PNG_NAME = "mls_strat_sample_audio_lengths_histogram.png"
+SPEAKER_DISTN_PLOT_PNG_NAME = "mls_strat_sample_speaker_distribution.png"
+SPEAKER_DISTN_JSON_NAME = "mls_strat_sample_speaker_distribution.json"
 
 
 def parse_args():
@@ -38,7 +41,7 @@ def parse_args():
     parser.add_argument("jsonl_path", type=Path)
     parser.add_argument("--token-delimiter", type=str, default=None)
     parser.add_argument("--audio-dir", type=Path, required=True)
-    parser.add_argument("--hist-dir", type=Path, required=True)
+    parser.add_argument("--assets-dir", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -55,9 +58,9 @@ def eda_length_dist(
     seq_len_quantiles = {k: v for k, v in zip(probs, np.quantile(sequence_lens, probs))}
     if file is not None:
         LOGGER.info(f"Summary statistics for {file!s}:")
-    LOGGER.info(f"Sequence length quantiles (tokens): \n{pformat(seq_len_quantiles)}")
-    LOGGER.info(f"Mean sequence length (tokens): {np.mean(sequence_lens):,.2f}")
-    LOGGER.info(f"Std dev. of sequence length (tokens): {np.std(sequence_lens):,.2f}")
+    LOGGER.info(f"Sequence length quantiles (tokens): \n{pformat(seq_len_quantiles)}")  # TODO FIX log msg not general
+    LOGGER.info(f"Mean sequence length (tokens): {np.mean(sequence_lens):,.2f}")  # TODO FIX log msg not general
+    LOGGER.info(f"Std dev. of sequence length (tokens): {np.std(sequence_lens):,.2f}")  # TODO FIX log msg not general
 
     fig, ax = plt.subplots(figsize=figsize)
     sns.histplot(ax=ax, data=sequence_lens, stat="count", bins=50)
@@ -85,10 +88,11 @@ def duration_lambda(samples: list[dict], audio_dir: Path) -> list[float | None]:
     return durs
 
 
-def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, hist_dir: Path):
+def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, assets_dir: Path):
     dataset = read_jsonl(jsonl_path)
     probs = [0.001, 0.01, 0.25, 0.5, 0.75, 0.99, 0.999]
 
+    """
     # token sequence length distribution
     sequence_lens = np.array(
         [len(s[TEXT_KEY].strip().split(token_delimiter)) for s in tqdm(dataset, desc="Computing text sequence lengths")]
@@ -96,7 +100,7 @@ def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, hist_di
     eda_length_dist(
         sequence_lens,
         probs,
-        hist_path=hist_dir / TEXT_SEQ_LENS_HIST_PNG_NAME,
+        hist_path=assets_dir / TEXT_SEQ_LENS_HIST_PNG_NAME,
         xlabel="Text Sequence Length / tokens",
         ylabel="Count",
         label_height_scale=0.5,
@@ -113,15 +117,36 @@ def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, hist_di
     eda_length_dist(
         audio_durations,
         probs,
-        hist_path=hist_dir / AUDIO_DURATIONS_HIST_PNG_NAME,
+        hist_path=assets_dir / AUDIO_DURATIONS_HIST_PNG_NAME,
         xlabel="Audio Duration / s",
         ylabel="Count",
         file=jsonl_path,
     )
+    """
 
-    # speaker distribution
-    # speakers = [s["ID"].split("_")[0]]  # MLS IDs are of form {speaker}_{book}_{audio} e.g. 4800_10003_000000
-    # Counter()
+    # speaker distribution - NOTE MLS IDs are of form {speaker}_{book}_{audio} e.g. 4800_10003_000000
+    speaker_cntr = Counter([sample["ID"][: sample["ID"].index("_")] for sample in dataset])
+    speaker_distn_json_path = assets_dir / SPEAKER_DISTN_JSON_NAME
+    with open(speaker_distn_json_path, "w") as f:
+        json.dump(speaker_cntr, f, indent=4)
+    LOGGER.info(f"Wrote speaker distribution to {speaker_distn_json_path!s}")
+
+    # histogram - speaker distribution i.e. samples per speaker
+    fig, ax = plt.subplots(figsize=(32, 12))
+    ax.bar(speaker_cntr.keys(), speaker_cntr.values())
+    ax.set(xlabel="Speaker", ylabel="Count")
+    plt.xticks(rotation=90, fontsize=8)
+    speaker_plt_path = assets_dir / SPEAKER_DISTN_PLOT_PNG_NAME
+    plt.savefig(speaker_plt_path)
+    LOGGER.info(f"Wrote histogram of speaker distribution to {speaker_plt_path!s}")
+
+    # summary stats - speaker distribution i.e. samples per speaker
+    speaker_distn = np.array(list(speaker_cntr.values()))
+    speaker_quantiles = {k: v for k, v in zip(probs, np.quantile(speaker_distn, probs))}
+    LOGGER.info(f"Speaker summary statistics for {jsonl_path!s}:")
+    LOGGER.info(f"Speaker quantiles / samples: \n{pformat(speaker_quantiles)}")
+    LOGGER.info(f"Mean number of samples by speaker: {np.mean(speaker_distn):,.2f}")
+    LOGGER.info(f"Std dev. of number of samples by speaker: {np.std(speaker_distn):,.2f}")
 
 
 if __name__ == "__main__":
