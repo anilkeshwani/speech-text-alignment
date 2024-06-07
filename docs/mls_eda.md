@@ -16,4 +16,4 @@ Sequence length quantiles:
 - 0.99: 65.0
 - 0.999: 74.0
 
-[Histogram of sequence lengths of MLS](/docs/assets/mls_strat_sample_seq_lengths_histogram.png)
+![Histogram of sequence lengths of MLS](/docs/assets/mls_strat_sample_seq_lengths_histogram.png)
