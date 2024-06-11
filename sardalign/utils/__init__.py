@@ -7,6 +7,11 @@ import torch
 from tqdm import tqdm
 
 
+################################################################################
+# Data helpers
+################################################################################
+
+
 def write_jsonl(
     jsonl: Path, samples: list[dict], mode: str = "x", encoding: str = "utf-8", ensure_ascii: bool = False
 ) -> None:
@@ -17,21 +22,6 @@ def write_jsonl(
 def read_jsonl(jsonl: Path, mode: str = "r", encoding: str = "utf-8") -> list[dict]:
     with open(jsonl, mode=mode, encoding=encoding) as f:
         return [json.loads(line) for line in tqdm(f, desc=f"Reading data from {jsonl!s}")]
-
-
-def echo_environment_info(torch, torchaudio, device: torch.device) -> None:
-    print("Using torch version:", torch.__version__)
-    print("Using torchaudio version:", torchaudio.__version__)
-    print("Using device: ", device)
-
-
-def get_device(device: str | None = None) -> torch.device:
-    if device is not None:
-        return torch.device(device)
-    mps_available = torch.backends.mps.is_available()
-    mps_built = torch.backends.mps.is_built()
-    local_device = "mps" if (mps_available and mps_built) else "cpu"
-    return torch.device("cuda" if torch.cuda.is_available() else local_device)
 
 
 def count_lines(file: Path | str, max_bytes_to_check: int = 32):
@@ -61,6 +51,31 @@ def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:
     """
     speaker_id, book_id, file_specifier = mls_id.removesuffix(suffix).split("_")
     return (audio_dir / speaker_id / book_id / mls_id).with_suffix(suffix)
+
+
+################################################################################
+# Hardware helpers
+################################################################################
+
+
+def echo_environment_info(torch, torchaudio, device: torch.device) -> None:
+    print("Using torch version:", torch.__version__)
+    print("Using torchaudio version:", torchaudio.__version__)
+    print("Using device: ", device)
+
+
+def get_device(device: str | None = None) -> torch.device:
+    if device is not None:
+        return torch.device(device)
+    mps_available = torch.backends.mps.is_available()
+    mps_built = torch.backends.mps.is_built()
+    local_device = "mps" if (mps_available and mps_built) else "cpu"
+    return torch.device("cuda" if torch.cuda.is_available() else local_device)
+
+
+################################################################################
+# Argument parsing helpers
+################################################################################
 
 
 def get_integer_sample_size(sample_size: int | float, N: int) -> int:
