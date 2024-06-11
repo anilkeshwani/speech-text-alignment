@@ -1,11 +1,23 @@
 import json
+import logging
 import os
+import sys
 from argparse import ArgumentTypeError
 from pathlib import Path
 
 import torch
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from tqdm import tqdm
 
+
+logging.basicConfig(
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
+    stream=sys.stdout,
+)
+
+LOGGER = logging.getLogger(__name__)
 
 ################################################################################
 # Data helpers
