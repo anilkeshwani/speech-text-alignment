@@ -4,6 +4,7 @@ from argparse import ArgumentTypeError
 from pathlib import Path
 
 import torch
+from tqdm import tqdm
 
 
 def write_jsonl(
@@ -15,7 +16,7 @@ def write_jsonl(
 
 def read_jsonl(jsonl: Path, mode: str = "r", encoding: str = "utf-8") -> list[dict]:
     with open(jsonl, mode=mode, encoding=encoding) as f:
-        return [json.loads(line) for line in f]
+        return [json.loads(line) for line in tqdm(f, desc=f"Reading data from {jsonl!s}")]
 
 
 def echo_environment_info(torch, torchaudio, device: torch.device) -> None:
