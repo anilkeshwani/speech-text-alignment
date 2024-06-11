@@ -15,7 +15,7 @@ logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO").upper(),
     stream=sys.stdout,
 )
-logger = logging.getLogger("dump_km_label")
+logger = logging.getLogger(__name__)
 
 
 class ApplyKmeans(object):
