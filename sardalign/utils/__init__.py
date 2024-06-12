@@ -65,6 +65,28 @@ def mls_id_to_path(mls_id: str, audio_dir: Path, suffix: str = ".flac") -> Path:
     return (audio_dir / speaker_id / book_id / mls_id).with_suffix(suffix)
 
 
+def shard_jsonl(
+    jsonl: Path,
+    *,
+    shard_size: int | None = None,
+    n_shards: int | None = None,
+    shard_dir: Path | None = None,
+) -> None:
+    if (shard_size is None) == (n_shards is None):  # XOR
+        raise ValueError("Specify exactly one of `shard_size` or `n_shards`")
+    dataset = read_jsonl(jsonl)
+    if n_shards is not None:
+        shard_size = len(dataset) // n_shards
+    if shard_dir is None:
+        shard_dir = jsonl.parent / f"{jsonl.stem}_shards"
+    shard_dir.mkdir(parents=True, exist_ok=True)
+    shards = [dataset[i : i + shard_size] for i in range(0, len(dataset), shard_size)]
+    for i, shard in enumerate(shards):
+        shard_jsonl = shard_dir / jsonl.with_stem(f"{jsonl.stem}_shard_{i:0{len(str(n_shards))}}").name
+        write_jsonl(shard_jsonl, shard)
+    LOGGER.info(f"Sharded {jsonl} into {len(shards)} shards in {shard_dir}")
+
+
 ################################################################################
 # Hardware helpers
 ################################################################################
