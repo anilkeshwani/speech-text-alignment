@@ -38,21 +38,19 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
 
 Alignment and encoding of audio into HuBERT speech tokens is performed in a single script to reduce overhead. 
 
-**WIP call - testing**:
-
 ```bash
-HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
+HAFH='/mnt/scratch-artemis/anilkeshwani' && cd "${HAFH}/speech-text-alignment"
 
 ./scripts/align_and_hubert_encode.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman.jsonl" \
-    --out-jsonl "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert.jsonl" \
+    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_shards/transcripts_stratified_sample_2702009_uroman_shard_1.jsonl" \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio"          \
     --lang 'eng' \
     --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
     --layer 22 \
-    --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000' \
-    --head 1000
+    --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000'
 ```
+
+The `--head ${num_lines}` option can be passed to run a test using only the top `num_lines` lines. 
 
 ### Generated Interleaved Speech-Text Datasets
 
