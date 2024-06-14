@@ -76,7 +76,7 @@ def shard_jsonl(
         raise ValueError("Specify exactly one of `shard_size` or `n_shards`")
     dataset = read_jsonl(jsonl)
     if n_shards is not None:
-        shard_size = len(dataset) // n_shards
+        shard_size = -(-len(dataset) // n_shards)
     if shard_dir is None:
         shard_dir = jsonl.parent / f"{jsonl.stem}_shards"
     shard_dir.mkdir(parents=True, exist_ok=True)
