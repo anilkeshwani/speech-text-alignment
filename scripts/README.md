@@ -58,8 +58,7 @@ The `--head ${num_lines}` option can be passed to run a test using only the top 
 HAFH='/mnt/scratch-artemis/anilkeshwani'
 
 ./scripts/generate_interleaved_data.py \
-    "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert.jsonl" \
-    --output-jsonl "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert_interleaved.jsonl"
+    "${HAFH}/tmp/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_aligned_hubert.jsonl"
 ```
 
 ### MLS EDA

@@ -21,3 +21,8 @@ TEXT_KEY: str = "transcript"  # key for text transcripts (pre-tokenization) in J
 SPEECH_TOKENS_KEY: str = "speech_tokens"  # key for speech tokens in JSON lines manifests
 ALIGNMENT_KEY: str = "alignment"  # key for text token-audio alignments in JSON lines manifests
 HUBERT_TOKEN_FSTRING: str = "<extra_id_{}>"
+MODALITY_TOKEN_SPEECH: str = "<extra_id_MM_SPEECH>"
+MODALITY_TOKEN_TEXT: str = "<extra_id_MM_TEXT>"
+MEGATRON_TEXT_KEY: str = "text"
+
+TOKEN_DELIMITER: str | None = None
