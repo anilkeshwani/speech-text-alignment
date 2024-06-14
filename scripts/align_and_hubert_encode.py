@@ -122,11 +122,9 @@ def main(args):
                 audio_path, uroman_tokens, mms_aligner_model, mms_aligner_dict, args.use_star, device
             )
             spans = get_spans(uroman_tokens, segments)
-            assert len(tokens) == len(
-                spans
-            ), f"Length mismatch: len(spans) = {len(spans)} vs len(tokens) = {len(tokens)}"
+            assert len(tokens) == len(spans), f"Length mismatch: len(spans)={len(spans)} vs len(tokens)={len(tokens)}"
             sample |= {SPEECH_TOKENS_KEY: kmeans(hubert_featurizer(wave)).tolist()}
-            sample |= {ALIGNMENT_KEY: {token: get_span_times(span, stride_ms) for (token, span) in zip(tokens, spans)}}
+            sample |= {ALIGNMENT_KEY: [(tkn, get_span_times(span, stride_ms)) for (tkn, span) in zip(tokens, spans)]}
             f.write(json.dumps(sample) + "\n")
 
     LOGGER.info(f"Wrote {count_lines(args.out_jsonl)} lines to {args.out_jsonl!s}")
