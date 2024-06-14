@@ -42,7 +42,7 @@ Alignment and encoding of audio into HuBERT speech tokens is performed in a sing
 HAFH='/mnt/scratch-artemis/anilkeshwani' && cd "${HAFH}/speech-text-alignment"
 
 ./scripts/align_and_hubert_encode.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_shards/transcripts_stratified_sample_2702009_uroman_shard_3.jsonl" \
+    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_shards/transcripts_stratified_sample_2702009_uroman_shard_5.jsonl" \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio"          \
     --lang 'eng' \
     --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
