@@ -77,7 +77,7 @@ def interleave_dataset(
     if output_jsonl is None:
         output_jsonl = input_jsonl.with_stem(input_jsonl.stem + "_interleaved")
 
-    dataset = read_jsonl(input_jsonl)
+    dataset = read_jsonl(input_jsonl)  # TODO stream input file in loop with processing; same for writing output
     interleaved_dataset: list[dict] = []
 
     for i, sample in enumerate(tqdm(dataset, desc="Generating interleaved text-speech samples")):
