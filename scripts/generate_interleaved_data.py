@@ -23,7 +23,7 @@ from sardalign.constants import (
     TOKEN_DELIMITER,
 )
 from sardalign.utils import count_lines, read_jsonl, write_jsonl
-from sardalign.utils.align import span_times_to_hubert_idxs
+from sardalign.utils.align import times_to_hubert_idxs
 from tqdm import tqdm
 
 
@@ -63,8 +63,8 @@ def parse_args() -> Namespace:
 
 def get_span_idxs_binomial(n: int, p: float, seq_len: int, seed: int = SEED) -> list[int]:
     prng = np.random.default_rng(seed)
-    subspan_idxs = np.maximum(prng.binomial(int(n), p, size=seq_len), 1).cumsum()
-    return [0] + subspan_idxs[subspan_idxs < (seq_len - 1)].tolist() + [(seq_len - 1)]
+    subspan_idxs = np.maximum(prng.binomial(n, p, size=seq_len), 1).cumsum()
+    return [0] + subspan_idxs[subspan_idxs < seq_len].tolist() + [seq_len]
 
 
 def interleave_dataset(
@@ -83,33 +83,27 @@ def interleave_dataset(
     for i, sample in enumerate(tqdm(dataset, desc="Generating interleaved text-speech samples")):
         start_with_text = i % 2 == 0  # even-indexed samples start w/ text
         speech_tokens = sample[SPEECH_TOKENS_KEY]
+        alignments = sample[ALIGNMENT_KEY]
         tokens = sample[TEXT_KEY].split(token_delimiter)
-        alignment = list(sample[ALIGNMENT_KEY].values())
-        if len(tokens) != len(alignment):
-            raise ValueError(
-                f"Tokens and alignment lengths differ: {len(tokens)} vs. {len(alignment)} for sample "
-                f"{input_jsonl!s}#{i + 1}"
-            )
+        assert len(tokens) == len(alignments), f"Token and alignment lengths differ: {input_jsonl!s}#{i + 1}"
         span_idxs = get_span_idxs_binomial(int(MEAN_MLS_SEQ_LEN), BINOM_PROB, len(tokens), seed)
-        idxs1, idxs2 = zip(span_idxs[:-1:2], span_idxs[1::2]), zip(span_idxs[1:-1:2], span_idxs[2::2])  # BUG truncates
-        print(f"{len(tokens)}")
+        idxs1, idxs2 = zip(span_idxs[:-1:2], span_idxs[1::2]), zip(span_idxs[1:-1:2], span_idxs[2::2])
         text_idxs, hubert_idxs = (idxs1, idxs2) if start_with_text else (idxs2, idxs1)
         text_spans: list[str] = [" ".join(tokens[start_idx:end_idx]) for start_idx, end_idx in text_idxs]
         hubert_spans: list[str] = []
         for start_idx, end_idx in hubert_idxs:
-            (start_time, _), (_, end_time) = alignment[start_idx], alignment[end_idx]
-            start_idx_hu, end_idx_hu = span_times_to_hubert_idxs(
-                (start_time, end_time), SAMPLING_FREQ, HUBERT_DOWNSAMPLING_RATIO
-            )
+            _alignments = alignments[start_idx:end_idx]
+            (first_tkn, (t_start, _)), (last_tkn, (_, t_end)) = _alignments[0], _alignments[-1]
+            start_idx_hu, end_idx_hu = times_to_hubert_idxs((t_start, t_end), SAMPLING_FREQ, HUBERT_DOWNSAMPLING_RATIO)
             speech_tokens_span = speech_tokens[start_idx_hu:end_idx_hu]
-            hubert_spans.append("".join([HUBERT_TOKEN_FSTRING.format(ht) for ht in speech_tokens_span]))
+            hubert_spans.append("".join([HUBERT_TOKEN_FSTRING.format(speech_tkn) for speech_tkn in speech_tokens_span]))
 
         if use_modality_tokens:
             text_spans = [" ".join((MODALITY_TOKEN_TEXT, text_span)) for text_span in text_spans]
             hubert_spans = [" ".join((MODALITY_TOKEN_SPEECH, hubert_span)) for hubert_span in hubert_spans]
 
         mm_spans = (text_spans, hubert_spans) if start_with_text else (hubert_spans, text_spans)
-        interleaved_segment = " ".join([span for spans in zip_longest(*mm_spans, fillvalue="") for span in spans])
+        interleaved_segment = " ".join([span for spans in zip_longest(*mm_spans) for span in spans if span is not None])
         interleaved_dataset.append({MEGATRON_TEXT_KEY: interleaved_segment})
 
     write_jsonl(output_jsonl, interleaved_dataset, "w")

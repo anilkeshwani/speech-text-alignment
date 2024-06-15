@@ -216,9 +216,7 @@ def get_span_times(span: list[Segment], stride_ms: float) -> tuple[float, float]
     return audio_start_sec, audio_end_sec
 
 
-def span_times_to_hubert_idxs(
-    times: tuple[float, float], sampling_rate: int, downsampling_ratio: int
-) -> tuple[int, int]:
+def times_to_hubert_idxs(times: tuple[float, float], sampling_rate: int, downsampling_ratio: int) -> tuple[int, int]:
     span_start_sec, span_end_sec = times
     start_idx = int(span_start_sec * sampling_rate / downsampling_ratio)
     end_idx = int(ceil(span_end_sec * sampling_rate / downsampling_ratio))
