@@ -1,5 +1,4 @@
 fairseq==0.12.2
-faiss==1.5.3
 joblib==1.4.2
 librosa==0.10.2
 matplotlib==3.8.4
