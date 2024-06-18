@@ -84,7 +84,7 @@ def interleave_dataset(
         start_with_text = i % 2 == 0  # even-indexed samples start w/ text
         speech_tokens = sample[SPEECH_TOKENS_KEY]
         alignments = sample[ALIGNMENT_KEY]
-        tokens = sample[TEXT_KEY].split(token_delimiter)
+        tokens = sample[TEXT_KEY].split(token_delimiter)  # TODO take these directly from alignments? (Else add note)
         assert len(tokens) == len(alignments), f"Token and alignment lengths differ: {input_jsonl!s}#{i + 1}"
         span_idxs = get_span_idxs_binomial(int(MEAN_MLS_SEQ_LEN), BINOM_PROB, len(tokens), seed)
         idxs1, idxs2 = zip(span_idxs[:-1:2], span_idxs[1::2]), zip(span_idxs[1:-1:2], span_idxs[2::2])
@@ -96,6 +96,7 @@ def interleave_dataset(
             (first_tkn, (t_start, _)), (last_tkn, (_, t_end)) = _alignments[0], _alignments[-1]
             start_idx_hu, end_idx_hu = times_to_hubert_idxs((t_start, t_end), SAMPLING_FREQ, HUBERT_DOWNSAMPLING_RATIO)
             speech_tokens_span = speech_tokens[start_idx_hu:end_idx_hu]
+            # TODO add functionality for optional de-duplication of HuBERT speech tokens
             hubert_spans.append("".join([HUBERT_TOKEN_FSTRING.format(speech_tkn) for speech_tkn in speech_tokens_span]))
 
         if use_modality_tokens:
