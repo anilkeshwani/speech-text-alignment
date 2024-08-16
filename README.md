@@ -26,8 +26,8 @@ Install the package and with it all dependencies including useful dependencies f
 
 ```bash
 conda create -n sardalign python=3.10.6 -y &&
-    pip install pip==24.0 &&
     conda activate sardalign &&
+    pip install pip==24.0 &&
     pip install -e .["dev"]
 ```
 
