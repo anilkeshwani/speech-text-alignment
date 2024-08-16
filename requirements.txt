@@ -1,3 +1,4 @@
+datasets>=2.20.0
 fairseq==0.12.2
 joblib==1.4.2
 librosa==0.10.2
@@ -15,5 +16,5 @@ soundfile==0.12.1
 sox==1.5.0
 torch==2.2.2
 torchaudio==2.2.2
-tqdm==4.65.0
+tqdm>=4.65.0
 Unidecode==1.3.8
