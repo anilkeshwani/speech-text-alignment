@@ -117,7 +117,8 @@ def main(args):
             desc="Aligning and encoding HuBERT tokens",
             total=len(dataset),
         ):
-            audio_path = mls_id_to_path(sample["ID"], audio_dir=args.audio_dir, suffix=args.suffix)
+            # audio_path = mls_id_to_path(sample["ID"], audio_dir=args.audio_dir, suffix=args.suffix) # TODO HACK
+            audio_path = Path(sample["path"])  # GigaSpeech # TODO HACK to run this quickly - come back and refactor
             segments, stride_ms, wave = get_alignments(
                 audio_path, uroman_tokens, mms_aligner_model, mms_aligner_dict, args.use_star, device
             )
