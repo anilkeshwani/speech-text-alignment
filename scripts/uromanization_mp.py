@@ -74,9 +74,13 @@ def normalize_chunk(chunk: list[list[str]], lang: str):
 
 
 def main(args):
+    if args.output_jsonl.exists():
+        raise FileExistsError(f"Uromanized JSON lines output file already exists at {args.output_jsonl}")
+
     if not args.output_jsonl.parent.exists():
         args.output_jsonl.parent(parents=True, exist_ok=True)
         LOGGER.info(f"Created directory for output at {args.output_jsonl.parent}")
+
     dataset = read_jsonl(args.input_jsonl)
     LOGGER.info(f"Read {len(dataset)} lines from {args.input_jsonl}")
 
