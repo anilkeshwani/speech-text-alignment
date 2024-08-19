@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
+import json
 import logging
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from pprint import pp
 
-from datasets import Dataset, NamedSplit
+from datasets import Dataset, Features, NamedSplit, Sequence, Value
 from huggingface_hub import HfApi
+from torch import NoneType
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 
@@ -22,6 +25,30 @@ LOGGER = logging.getLogger(__file__)
 
 HF_DATASETS_BASE_URL: str = "https://huggingface.co/datasets"
 
+HF_DATASETS_FEATURES_MAP = {
+    "gigaspeech": Features(
+        {
+            "segment_id": Value("string"),
+            "text": Value("string"),
+            "text_processed": Value("string"),
+            "audio_id": Value("string"),
+            "path": Value("string"),
+            "speaker": Value("string"),
+            "begin_time": Value("float"),
+            "end_time": Value("float"),
+            "title": Value("string"),
+            "url": Value("string"),
+            "source": Value("int32"),
+            "category": Value("int32"),
+            "original_full_path": Value("string"),
+            "normalized": Sequence(Value("string")),
+            "uroman": Sequence(Value("string")),
+            "speech_tokens": Sequence(Value("int32")),
+            "alignment": Sequence({"token": Value("string"), "span_times": Sequence(Value("float"), length=2)}),
+        }
+    )
+}
+
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
@@ -32,6 +59,12 @@ def parse_args() -> Namespace:
         type=str,
         required=True,
         help="A namespace (user or an organization) and a repo name separated by a /",
+    )
+    parser.add_argument(
+        "--features",
+        type=str,
+        required=True,
+        help="String identifying the dataset type from which the Hugging Face Features mapping will be inferred.",
     )
     parser.add_argument("--split", type=str, default=None, help="Split name to be assigned to the dataset.")
     parser.add_argument(
@@ -65,6 +98,7 @@ def parse_args() -> Namespace:
 def main(
     path_or_paths: str,
     split: str | None,
+    features: str,
     cache_dir: str | None,
     keep_in_memory: bool,
     num_proc: int | None,
@@ -82,9 +116,16 @@ def main(
         LOGGER.info(f"No repo namespace specified. Inferring from username: {repo_id}")
     if split is not None:
         split = NamedSplit(split)
+    # Features
+    features_map = HF_DATASETS_FEATURES_MAP[features.lower()]
+    with open(path_or_paths) as f:
+        line = json.loads(f.readline())
+    if features_map.keys() != line.keys():
+        raise RuntimeError(f"Expected features: {features_map}. Check HF_DATASETS_FEATURES_MAP")  # NOTE not recursive
     ds = Dataset.from_json(
         path_or_paths,
         split=split,
+        features=None,  # <- TODO
         cache_dir=cache_dir,  # type: ignore
         keep_in_memory=keep_in_memory,
         num_proc=num_proc,
