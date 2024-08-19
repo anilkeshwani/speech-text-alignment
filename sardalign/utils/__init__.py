@@ -6,8 +6,9 @@ from argparse import ArgumentTypeError
 from pathlib import Path
 
 import torch
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from tqdm import tqdm
+
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 
 
 logging.basicConfig(
@@ -18,6 +19,34 @@ logging.basicConfig(
 )
 
 LOGGER = logging.getLogger(__name__)
+
+
+################################################################################
+# General
+################################################################################
+
+
+def get_type_mapping(data):
+    """
+    Recursively generates a type mapping for the given data structure. Intended for deserialised JSON.
+
+    Args:
+        data: The data structure to generate a type mapping for. Can be a dict, list, or any other type.
+
+    Returns:
+        A type mapping for the given data structure, represented as a nested dict or list of type names.
+
+    Notes:
+        Function intended for use with data resulting from JSON (lines) deserialisation, which yields
+        lists not tuples for sequence data types and dictionaries not other mapping types for mappings.
+    """
+    if isinstance(data, dict):
+        return {key: get_type_mapping(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [get_type_mapping(item) for item in data]
+    else:
+        return type(data).__name__
+
 
 ################################################################################
 # Data helpers
