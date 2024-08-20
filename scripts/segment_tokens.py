@@ -8,7 +8,7 @@ import sox
 import torch
 import torchaudio
 from sardalign.align import get_alignments
-from sardalign.constants import PROJECT_ROOT, STAR_TOKEN
+from sardalign.constants import PROJECT_ROOT, STAR_TOKEN, TOKEN_DELIMITER_DEFAULT
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_spans, get_uroman_tokens, load_mms_aligner_model_and_dict
@@ -26,7 +26,7 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--token-delimiter",
         type=str,
-        default=None,
+        default=TOKEN_DELIMITER_DEFAULT,
         help="Token delimiter as used by str.split; defaults to None, i.e. splits on any whitespace",
     )
     parser.add_argument("--uroman-path", type=Path, default=None, help="Location to uroman/bin")

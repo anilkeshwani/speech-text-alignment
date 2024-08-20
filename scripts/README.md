@@ -1,31 +1,31 @@
 # Scripts
 
-## Featurization with HuBERT
+Usage instructions and example CLI calls for scripts. 
+
+All scripts can be called with a `--help` option
+
+Note: For convenience, on the research lab's server, I have a _home away from home_:
 
 ```bash
-HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME
-
-jsonl="${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl"
-audio_dir="${HAFH}/data/MLS/mls_english/dev/audio"
-ckpt_path='/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt'
-layer=6
-feat_dir="${HAFH}/tmp/hubert_features_test/"
-
-./scripts/dump_hubert_feature.py \
-    --jsonl "${jsonl}" \
-    --audio-dir "${audio_dir}" \
-    --ckpt-path "${ckpt_path}" \
-    --layer "${layer}" \
-    --feat-dir "${feat_dir}"
+export HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 ```
 
-## Performing Alignment
-
-Example call:
+## HuBERT Featurization
 
 ```bash
-HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
+./scripts/dump_hubert_feature.py \
+    --jsonl "${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl" \
+    --audio-dir "${HAFH}/data/MLS/mls_english/dev/audio" \
+    --ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
+    --layer 6 \
+    --feat-dir "${HAFH}/tmp/hubert_features_test/"
+```
 
+## Speech-Text Alignment
+
+These alignments are at the word or token level. 
+
+```bash
 ./scripts/segment_tokens.py \
     --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_existing_files_only.jsonl" \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
@@ -34,16 +34,37 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexibl
     --head 10
 ```
 
-## Generating Datasets with Alignments and HuBERT Speech Tokens
-
-Alignment and encoding of audio into HuBERT speech tokens is performed in a single script to reduce overhead. 
+## Text Preprocessing of Raw Datasets: Tokenization, Normalization and Uromanization
 
 ```bash
-HAFH='/mnt/scratch-artemis/anilkeshwani' && cd "${HAFH}/speech-text-alignment"
+./scripts/uromanization_mp.py \
+    --text-key 'normalized_text' \
+    '/mnt/scratch-artemis/anilkeshwani/data/voxpopuli_hf/VoxPopuli.jsonl'
+```
 
+This script parallelizes work over processes and assigns the number of available CPUs - 1 to perform preprocessing. 
+
+## Generating Datasets with Alignments and HuBERT Speech Tokens
+
+Alignment and encoding of audio into HuBERT speech tokens is performed in a single script to reduce overhead e.g. I/O. 
+
+These alignments are at the word or token level. 
+
+```bash
 ./scripts/align_and_hubert_encode.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_shards/transcripts_stratified_sample_2702009_uroman_shard_5.jsonl" \
-    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio"          \
+    --jsonl '/mnt/scratch-artemis/anilkeshwani/data/voxpopuli_hf/VoxPopuli_uroman.jsonl' \
+    --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
+    --layer 22 \
+    --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000'
+```
+
+Example for **MLS**, which uses IDs its JSON lines manifest (filelist) not paths. 
+
+```bash
+./scripts/align_and_hubert_encode.py \
+    --jsonl "/mnt/scratch-artemis/anilkeshwani/tmp/mls_english_train_ss_head_200_uroman.jsonl" \
+    --ids-not-paths \
+    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
     --lang 'eng' \
     --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
     --layer 22 \
@@ -52,7 +73,7 @@ HAFH='/mnt/scratch-artemis/anilkeshwani' && cd "${HAFH}/speech-text-alignment"
 
 The `--head ${num_lines}` option can be passed to run a test using only the top `num_lines` lines. 
 
-### Generated Interleaved Speech-Text Datasets
+### Interleaving Speech and Text Data
 
 ```bash
 HAFH='/mnt/scratch-artemis/anilkeshwani'
@@ -64,7 +85,6 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
 ### MLS EDA
 
 ```bash
-HAFH='/mnt/scratch-artemis/anilkeshwani'
 ./scripts/mls/eda.py \
     /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_2702009.jsonl \
     --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \

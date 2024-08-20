@@ -10,12 +10,13 @@ import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from sardalign.constants import PROJECT_ROOT
+from tqdm import tqdm
+
+from sardalign.constants import PROJECT_ROOT, TEXT_KEY_DEFAULT, TOKEN_DELIMITER_DEFAULT
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import read_jsonl, write_jsonl
 from sardalign.utils.align import get_uroman_tokens
 from sardalign.utils.uroman import post_process_uroman, RomFormat, Uroman
-from tqdm import tqdm
 
 
 def parse_args() -> Namespace:
@@ -23,11 +24,11 @@ def parse_args() -> Namespace:
     parser.add_argument("--jsonl", type=Path, required=True, help="Path to input JSON lines file")
     parser.add_argument("--out-dir", type=Path, required=True, help="Output directory")
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
-    parser.add_argument("--text-key", type=str, default="transcript", help="Key of text field in JSON lines manifest")
+    parser.add_argument("--text-key", type=str, default=TEXT_KEY_DEFAULT, help="Text field key in JSON lines manifest")
     parser.add_argument(
         "--token-delimiter",
         type=str,
-        default=None,
+        default=TOKEN_DELIMITER_DEFAULT,
         help="Token delimiter as used by str.split; defaults to None, i.e. splits on any whitespace",
     )
     parser.add_argument("--uroman-path", type=Path, default=None, help="Location to uroman/bin")

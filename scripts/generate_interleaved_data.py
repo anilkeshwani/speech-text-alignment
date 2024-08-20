@@ -8,6 +8,8 @@ from itertools import zip_longest
 from pathlib import Path
 
 import numpy as np
+from tqdm import tqdm
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import (
     ALIGNMENT_KEY,
@@ -19,12 +21,12 @@ from sardalign.constants import (
     SAMPLING_FREQ,
     SEED,
     SPEECH_TOKENS_KEY,
-    TEXT_KEY,
-    TOKEN_DELIMITER,
+    TEXT_KEY_DEFAULT,
+    TOKEN_DELIMITER_DEFAULT,
+    TOKENIZED_KEY,
 )
 from sardalign.utils import count_lines, read_jsonl, write_jsonl
 from sardalign.utils.align import times_to_hubert_idxs
-from tqdm import tqdm
 
 
 logging.basicConfig(
@@ -47,7 +49,7 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--token-delimiter",
         type=str,
-        default=TOKEN_DELIMITER,
+        default=TOKEN_DELIMITER_DEFAULT,
         help="Token delimiter as used by str.split; defaults to None, i.e. splits on any whitespace",
     )
     parser.add_argument(
@@ -71,7 +73,7 @@ def interleave_dataset(
     input_jsonl: Path,
     output_jsonl: Path | None = None,
     use_modality_tokens: bool = True,
-    token_delimiter: str | None = TOKEN_DELIMITER,
+    token_delimiter: str | None = TOKEN_DELIMITER_DEFAULT,
     seed: int = SEED,
 ) -> Path:
     if output_jsonl is None:
@@ -83,8 +85,8 @@ def interleave_dataset(
     for i, sample in enumerate(tqdm(dataset, desc="Generating interleaved text-speech samples")):
         start_with_text = i % 2 == 0  # even-indexed samples start w/ text
         speech_tokens = sample[SPEECH_TOKENS_KEY]
-        alignments = sample[ALIGNMENT_KEY]
-        tokens = sample[TEXT_KEY].split(token_delimiter)  # TODO take these directly from alignments? (Else add note)
+        alignments = sample[ALIGNMENT_KEY]  # TODO Update legacy code else BUG
+        tokens = sample[TOKENIZED_KEY]
         assert len(tokens) == len(alignments), f"Token and alignment lengths differ: {input_jsonl!s}#{i + 1}"
         span_idxs = get_span_idxs_binomial(int(MEAN_MLS_SEQ_LEN), BINOM_PROB, len(tokens), seed)
         idxs1, idxs2 = zip(span_idxs[:-1:2], span_idxs[1::2]), zip(span_idxs[1:-1:2], span_idxs[2::2])

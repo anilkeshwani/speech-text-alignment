@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import logging
 import multiprocessing as mp
 import os
@@ -7,12 +8,20 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
+from tqdm import tqdm
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import PROJECT_ROOT
+from sardalign.constants import (
+    NORMALIZED_KEY,
+    PROJECT_ROOT,
+    TEXT_KEY_DEFAULT,
+    TOKEN_DELIMITER_DEFAULT,
+    TOKENIZED_KEY,
+    UROMAN_KEY,
+)
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import read_jsonl, write_jsonl
 from sardalign.utils.uroman import post_process_uroman, RomFormat, Uroman
-from tqdm import tqdm
 
 
 logging.basicConfig(
@@ -31,16 +40,14 @@ UROMAN = Uroman(UROMAN_DATA_DIR)
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("input_jsonl", type=Path, help="Path to input JSON lines file")
+    parser.add_argument("--text-key", type=str, required=True, help="Text field key in *input* JSON lines file.")
     parser.add_argument("--output-jsonl", type=Path, default=None, help="Output JSON lines path")
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
     parser.add_argument("--n-processes", type=int, default=None, help="Number of parallel processes")
-    parser.add_argument("--text-key", type=str, default="transcript", help="Key of text field in JSON lines manifest")
-    parser.add_argument("--uroman-key", type=str, default="uroman", help="Key for uroman tokens in JSON lines manifest")
-    parser.add_argument("--normalized-key", type=str, default="normalized", help="Key for normalized tokens")
     parser.add_argument(
         "--token-delimiter",
         type=str,
-        default=None,
+        default=TOKEN_DELIMITER_DEFAULT,
         help="Token delimiter as used by str.split; defaults to None, i.e. splits on any whitespace",
     )
     args = parser.parse_args()
@@ -81,18 +88,26 @@ def main(args):
         args.output_jsonl.parent(parents=True, exist_ok=True)
         LOGGER.info(f"Created directory for output at {args.output_jsonl.parent}")
 
+    with open(args.input_jsonl) as f:
+        first_sample = json.loads(f.readline())
+    if any(new_key in first_sample.keys() for new_key in [NORMALIZED_KEY, TOKENIZED_KEY, UROMAN_KEY]):
+        raise RuntimeError(
+            "Conflict in key names. "
+            f"One of {[NORMALIZED_KEY, TOKENIZED_KEY, UROMAN_KEY]} already present in input data."
+        )
+
     dataset = read_jsonl(args.input_jsonl)
     LOGGER.info(f"Read {len(dataset)} lines from {args.input_jsonl}")
 
-    transcripts_s: list[list[str]] = []
+    tokens_s: list[list[str]] = []
     for s in tqdm(dataset, desc="Tokenizing dataset"):
-        transcripts_s.append(s[args.text_key].strip().split(args.token_delimiter))
+        tokens_s.append(s[args.text_key].strip().split(args.token_delimiter))
 
-    chunk_size = len(transcripts_s) // args.n_processes
+    chunk_size = len(tokens_s) // args.n_processes
 
-    transcripts_s_chunks = [transcripts_s[i : i + chunk_size] for i in range(0, len(transcripts_s), chunk_size)]
+    tokens_s_chunks = [tokens_s[i : i + chunk_size] for i in range(0, len(tokens_s), chunk_size)]
     with mp.Pool(processes=args.n_processes) as pool:
-        normalized_chunks = list(pool.starmap(normalize_chunk, [(chunk, args.lang) for chunk in transcripts_s_chunks]))
+        normalized_chunks = list(pool.starmap(normalize_chunk, [(chunk, args.lang) for chunk in tokens_s_chunks]))
 
     normalized_tokens_s = [item for sublist in normalized_chunks for item in sublist]
 
@@ -101,12 +116,16 @@ def main(args):
 
     uroman_tokens_s = [item for sublist in results for item in sublist]
 
-    dataset = [
-        s | {args.normalized_key: normalized_tokens, args.uroman_key: uroman_tokens}
-        for s, normalized_tokens, uroman_tokens in zip(dataset, normalized_tokens_s, uroman_tokens_s)
-    ]
+    uromanized_dataset = []
+    for s, tokens, normalized_tokens, uroman_tokens in zip(dataset, tokens_s, normalized_tokens_s, uroman_tokens_s):
+        if not (len(tokens) == len(normalized_tokens) == len(uroman_tokens)):
+            raise RuntimeError("Mismatch in number of tokens, normalized tokens and uromanized tokens.")
+        uromanized_dataset.append(
+            s | {TOKENIZED_KEY: tokens, NORMALIZED_KEY: normalized_tokens, UROMAN_KEY: uroman_tokens}
+        )
 
-    write_jsonl(args.output_jsonl, dataset)
+    write_jsonl(args.output_jsonl, uromanized_dataset)
+
     LOGGER.info(f"Wrote uromanized filelist to {args.output_jsonl}")
 
 

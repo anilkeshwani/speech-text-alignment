@@ -33,5 +33,4 @@ repos:
       - id: isort
         name: isort
         args:
-          # passing settings here did not work, so passed with pyproject.toml file
           - --settings-path=pyproject.toml

@@ -14,10 +14,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import sox
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import TEXT_KEY
-from sardalign.utils import mls_id_to_path, read_jsonl
 from tqdm import tqdm
+
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
+from sardalign.constants import TEXT_KEY_DEFAULT, TOKEN_DELIMITER_DEFAULT
+from sardalign.utils import mls_id_to_path, read_jsonl
 
 
 logging.basicConfig(
@@ -39,7 +40,7 @@ SPEAKER_DISTN_JSON_NAME = "mls_strat_sample_speaker_distribution.json"
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("jsonl_path", type=Path)
-    parser.add_argument("--token-delimiter", type=str, default=None)
+    parser.add_argument("--token-delimiter", type=str, default=TOKEN_DELIMITER_DEFAULT)
     parser.add_argument("--audio-dir", type=Path, required=True)
     parser.add_argument("--assets-dir", type=Path, required=True)
     return parser.parse_args()
@@ -95,7 +96,7 @@ def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, assets_
     """
     # token sequence length distribution
     sequence_lens = np.array(
-        [len(s[TEXT_KEY].strip().split(token_delimiter)) for s in tqdm(dataset, desc="Computing text sequence lengths")]
+        [len(s[TEXT_KEY_DEFAULT].strip().split(token_delimiter)) for s in tqdm(dataset, desc="Computing text sequence lengths")]
     )
     eda_length_dist(
         sequence_lens,
