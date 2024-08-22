@@ -20,5 +20,5 @@ N=200
         else
             break
         fi
-    done <"$filelist"
+    done < "$filelist"
 )
