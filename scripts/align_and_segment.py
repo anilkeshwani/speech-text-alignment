@@ -8,6 +8,7 @@ from pathlib import Path
 import sox
 import torch
 import torchaudio
+
 from sardalign.align import get_alignments
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import echo_environment_info, get_device

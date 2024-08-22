@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SEED
 from sardalign.utils import count_lines, get_integer_sample_size, parse_arg_int_or_float

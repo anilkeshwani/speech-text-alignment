@@ -8,9 +8,10 @@ from dataclasses import dataclass
 from math import ceil
 
 import torch
+from torchaudio.models import wav2vec2_model, Wav2Vec2Model
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import CTC_ALIGNMENT_MLING_UROMAN_DICT_PATH, CTC_ALIGNMENT_MLING_UROMAN_MODEL_PATH
-from torchaudio.models import wav2vec2_model, Wav2Vec2Model
 
 
 logging.basicConfig(

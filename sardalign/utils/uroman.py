@@ -38,6 +38,7 @@ from typing import List, Optional, Tuple, Union
 
 import regex
 from memory_profiler import profile
+
 from sardalign.utils.align import normalize_uroman
 
 

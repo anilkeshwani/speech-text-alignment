@@ -7,9 +7,10 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import sox
+from tqdm import tqdm
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.utils import mls_id_to_path, write_jsonl
-from tqdm import tqdm
 
 
 logging.basicConfig(

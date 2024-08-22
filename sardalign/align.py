@@ -7,10 +7,11 @@ import sox
 import torch
 import torchaudio
 import torchaudio.functional as F
+from torch import Tensor
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.utils.align import merge_repeats, Segment, time_to_frame
-from torch import Tensor
 
 
 logging.basicConfig(

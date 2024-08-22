@@ -8,9 +8,10 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import sox
+from tqdm import tqdm
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.utils import count_lines
-from tqdm import tqdm
 
 
 logging.basicConfig(

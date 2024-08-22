@@ -10,10 +10,11 @@ import torch.nn.functional as F
 import tqdm
 from fairseq.data.audio.audio_utils import get_features_or_waveform
 from npy_append_array import NpyAppendArray
+from torch import Tensor
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ
 from sardalign.utils import mls_id_to_path, read_jsonl
-from torch import Tensor
 
 
 logging.basicConfig(

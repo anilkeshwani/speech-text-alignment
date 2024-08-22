@@ -10,11 +10,12 @@ from typing import Any
 
 import librosa
 from datasets import load_dataset
+from tqdm import tqdm
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ
 from sardalign.constants.voxpopuli import VOXPOPULI_HF_DATASET_REPO
 from sardalign.utils import count_lines
-from tqdm import tqdm
 
 
 logging.basicConfig(

@@ -4,8 +4,9 @@ from pathlib import Path
 from pprint import pprint
 
 import sox
-from sardalign.utils import ljspeech_id_to_path, read_jsonl
 from tqdm import tqdm
+
+from sardalign.utils import ljspeech_id_to_path, read_jsonl
 
 
 k_means_labels_path: Path = Path("/home/anilkeshwani/tmp/hubert_kmeans_labels/metadata_0_1.km")

@@ -12,12 +12,13 @@ from typing import Any
 import librosa
 import nltk
 from datasets import load_dataset
+from tqdm import tqdm
+from truecase import TrueCaser
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ
 from sardalign.constants.gigaspeech import GS_GARBAGE_TAGS, GS_HF_DATASET_REPO, GS_PUNCTUATION_MAP
 from sardalign.utils import count_lines
-from tqdm import tqdm
-from truecase import TrueCaser
 
 
 logging.basicConfig(

@@ -9,9 +9,10 @@ from pathlib import Path
 
 import librosa
 import soundfile as sf
+from tqdm import tqdm
+
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.utils import write_jsonl
-from tqdm import tqdm
 
 
 logging.basicConfig(
