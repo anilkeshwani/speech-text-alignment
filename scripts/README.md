@@ -121,3 +121,18 @@ Run:
 ```bash
 ./resample_audio_files_ffmpeg_parallel.sh
 ```
+
+##
+
+Replace the input and output directories (in this case `/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs` and `/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000_7`) with appropriate paths.
+
+```bash
+find '/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs' \
+    -type f \
+    -name "*.wav" \
+    | parallel \
+    -j 32 \
+    "ffmpeg -i {} -ar 16000 /mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000_7/{/}"
+```
+
+See parallel --help for more details.

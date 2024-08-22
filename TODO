@@ -1,3 +1,8 @@
+- [ ] Fix CTC decoding issue for aberrant sample in VoxPopuli
+- [ ] Create interleaved dataset with VoxPopuli
+- [ ] As a check: Create an interleaved dataset with the MLS aligned speech-text data that you converted
+
+
 I've made --text-key required in uromanization_mp.py
 i.e. `parser.add_argument("--text-key", type=str, required=True, help="Text field key in *input* JSON lines file.")`
 
@@ -11,7 +16,7 @@ i.e. `parser.add_argument("--text-key", type=str, required=True, help="Text fiel
 
 - Rename generate_interleaved_data.py to interleave_data.py
 
-- finally: Ensure the pre-commit works and formats - and in particular isorts - everything that has been changed
+- [x] finally: Ensure the pre-commit works and formats - and in particular isorts - everything that has been changed
 
 - later: make hubert encoding optional in align_and_hubert_encode.py
 - find a better name for align_and_hubert_encode.py
