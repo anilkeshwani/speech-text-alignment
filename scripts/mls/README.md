@@ -9,7 +9,7 @@
     --head 20000
 ```
 
-Can optionally pass a `--output-jsonl` to specify where the output will be saved. If not explicitly passed, the JSON lines will be the the same as the txt file with a the suffix amended; additionally with the file name amended to reflect if the `--head` was taken. 
+Can optionally pass a `--output-jsonl` to specify where the output will be saved. If not explicitly passed, the JSON lines will be the the same as the txt file with a the suffix amended; additionally with the file name amended to reflect if the `--head` was taken.
 
 ## Stratified Sample of Transcripts JSON Lines - MLS
 

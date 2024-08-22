@@ -2,7 +2,7 @@
 
 Scripts to align speech audio with their text transcriptions in time.
 
-In addition to this README, broader [documentation can be found in docs/](/docs/).
+READMEs for individual scripts and modules are found at directory level.
 
 ## Setup
 

@@ -1,16 +1,16 @@
 # Notes on GigaSpeech inc. Preprocessing
 
-I ran preprocessing twice - once when the script loaded the whole preprocessed JSON lines manifest file into memory and then dumped this onto disk in one shot and another which periodically writes to an open file handle. 
+I ran preprocessing twice - once when the script loaded the whole preprocessed JSON lines manifest file into memory and then dumped this onto disk in one shot and another which periodically writes to an open file handle.
 
-I hashed both files to check they were identical: they were not. **The difference is accounted for in capitalisation differences produced after running truecasing using the [truecase](https://github.com/daltonfury42/truecase) Python package.**. See examples below. 
+I hashed both files to check they were identical: they were not. **The difference is accounted for in capitalisation differences produced after running truecasing using the [truecase](https://github.com/daltonfury42/truecase) Python package.**. See examples below.
 
 
-### Hashes do not match 
+### Hashes do not match
 
 ```bash
-(main) anilkeshwani@poseidon:/mnt/scratch-artemis/anilkeshwani/data/GigaSpeech_HF/sorted$ openssl dgst -sha256 GigaSpeech.jsonl 
+(main) anilkeshwani@poseidon:/mnt/scratch-artemis/anilkeshwani/data/GigaSpeech_HF/sorted$ openssl dgst -sha256 GigaSpeech.jsonl
 SHA2-256(GigaSpeech.jsonl)= d77950ffa2bc9d8210bd192772e8ffd96f2957e1c8c015da9b8d677e4655c417
-(main) anilkeshwani@poseidon:/mnt/scratch-artemis/anilkeshwani/data/GigaSpeech_HF/sorted$ openssl dgst -sha256 GigaSpeech_streamed.jsonl 
+(main) anilkeshwani@poseidon:/mnt/scratch-artemis/anilkeshwani/data/GigaSpeech_HF/sorted$ openssl dgst -sha256 GigaSpeech_streamed.jsonl
 SHA2-256(GigaSpeech_streamed.jsonl)= 1ee713453c5cab970063f7260595cd9b62a699aa8ace68ad2d590bc78fc6f857
 ```
 
@@ -22,7 +22,7 @@ Take the top 2,000 lines of each JSON lines manifest and run diff:
 (main) anilkeshwani@poseidon:/mnt/scratch-artemis/anilkeshwani/data/GigaSpeech_HF/sorted$ diff -s ./*top*
 ```
 
-In the first pair, for example, "thrice" is capitalised in the second but not the first. 
+In the first pair, for example, "thrice" is capitalised in the second but not the first.
 
 > Three civil Brawls, bred of an airy word by thee, old Capulet, and Montague, have **thrice** disturb'd the quiet of our streets and made Verona's ancient citizens cast by their grave Beseeming ornaments to wield old partisans, in hands as old, Cank'Red with peace,
 

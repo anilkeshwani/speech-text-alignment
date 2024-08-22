@@ -1,6 +1,6 @@
 # Scripts
 
-Usage instructions and example CLI calls for scripts. 
+Usage instructions and example CLI calls for scripts.
 
 All scripts can be called with a `--help` option
 
@@ -23,7 +23,7 @@ export HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows 
 
 ## Speech-Text Alignment
 
-These alignments are at the word or token level. 
+These alignments are at the word or token level.
 
 ```bash
 ./scripts/segment_tokens.py \
@@ -42,13 +42,13 @@ These alignments are at the word or token level.
     '/mnt/scratch-artemis/anilkeshwani/data/voxpopuli_hf/VoxPopuli.jsonl'
 ```
 
-This script parallelizes work over processes and assigns the number of available CPUs - 1 to perform preprocessing. 
+This script parallelizes work over processes and assigns the number of available CPUs - 1 to perform preprocessing.
 
 ## Generating Datasets with Alignments and HuBERT Speech Tokens
 
-Alignment and encoding of audio into HuBERT speech tokens is performed in a single script to reduce overhead e.g. I/O. 
+Alignment and encoding of audio into HuBERT speech tokens is performed in a single script to reduce overhead e.g. I/O.
 
-These alignments are at the word or token level. 
+These alignments are at the word or token level.
 
 ```bash
 ./scripts/align_and_hubert_encode.py \
@@ -58,7 +58,7 @@ These alignments are at the word or token level.
     --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000'
 ```
 
-Example for **MLS**, which uses IDs its JSON lines manifest (filelist) not paths. 
+Example for **MLS**, which uses IDs its JSON lines manifest (filelist) not paths.
 
 ```bash
 ./scripts/align_and_hubert_encode.py \
@@ -71,7 +71,7 @@ Example for **MLS**, which uses IDs its JSON lines manifest (filelist) not paths
     --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000'
 ```
 
-The `--head ${num_lines}` option can be passed to run a test using only the top `num_lines` lines. 
+The `--head ${num_lines}` option can be passed to run a test using only the top `num_lines` lines.
 
 ### Interleaving Speech and Text Data
 

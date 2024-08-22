@@ -1,10 +1,10 @@
 # GigaSpeech Scripts
 
-Prefer Hugging Face over raw GigaSpeech. 
+Prefer Hugging Face over raw GigaSpeech.
 
 ## GigaSpeech Direct from Hugging Face datasets
 
-Subsections here relate to processes if you download GigaSpeech via Hugging Face datasets, [datasets/speechcolab/gigaspeech](https://huggingface.co/datasets/speechcolab/gigaspeech), i.e. by filling out the HF request form and running `load_dataset("speechcolab/gigaspeech", "l", trust_remote_code=True)` alternatively specifying the `"xl"` subset. Note: Be sure to have librosa, soundfile and any other dependencies specified if going this route. 
+Subsections here relate to processes if you download GigaSpeech via Hugging Face datasets, [datasets/speechcolab/gigaspeech](https://huggingface.co/datasets/speechcolab/gigaspeech), i.e. by filling out the HF request form and running `load_dataset("speechcolab/gigaspeech", "l", trust_remote_code=True)` alternatively specifying the `"xl"` subset. Note: Be sure to have librosa, soundfile and any other dependencies specified if going this route.
 
 HF conveniently also performs all preprocessing, in particular:
 - segmenting audio into short audio clips
@@ -17,7 +17,7 @@ Preprocessing of the GigaSpeech metadata is necessary to:
 - Truecasing of the raw text provided in the GigaSpeech metadata
 - removal of any segments containing garbage utterances - as indicated by GigaSpeech's garbage utterance tags
 
-This tasks are performed by _scripts/gigagspeech/preprocess_hf_gigaspeech.py_. 
+This tasks are performed by _scripts/gigagspeech/preprocess_hf_gigaspeech.py_.
 
 **See `./preprocess_hf_gigaspeech.py --help` for usage details.**
 

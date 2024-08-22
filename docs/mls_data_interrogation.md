@@ -1,6 +1,6 @@
 # MLS Data Interrogation
 
-The [Multilingual LibriSpeech (MLS) dataset](https://arxiv.org/pdf/2012.03411) can be [downloaded from OpenSLR](https://www.openslr.org/94/) in subsets by language. 
+The [Multilingual LibriSpeech (MLS) dataset](https://arxiv.org/pdf/2012.03411) can be [downloaded from OpenSLR](https://www.openslr.org/94/) in subsets by language.
 
 The English subset is available as the original _flac_ audio files (2.4TB) or compressed _opus_ files (651GB). The GNU zipped tape-archived original flacs can be downloaded (in ~30 hours at ~25MB/s) with `wget` via:
 
@@ -14,14 +14,14 @@ Since the archive is 2.4TB, a manifest of files contained can be obtained via th
 tar --list -f mls_english.tar.gz > archive_contents.txt # run inside a tmux session; takes 5+ hours to complete
 ```
 
-Audio files (flacs) in MLS are organised into subdirectories for 
+Audio files (flacs) in MLS are organised into subdirectories for
 1. language
 2. split
 3. (audio)
 4. speaker ID
-5. book ID 
+5. book ID
 
-in the above order. 
+in the above order.
 
 Audio filenames are of the format `f"{speaker_id}_{book_id}_audio_id.flac"`.
 
@@ -31,7 +31,7 @@ For example:
 mls_english/dev/audio/1982/1551/1982_1551_000037.flac
 ```
 
-This results in a file containing 10,855,734 lines - this includes entries for directories. 
+This results in a file containing 10,855,734 lines - this includes entries for directories.
 
 ```bash
 wc archive_contents.txt #  10855734  10855734 618098858 archive_contents.txt
@@ -52,7 +52,7 @@ Subsequently count the number of files of each type to validate the data:
 
 ```
 {
-    'flac': 10815613, 
+    'flac': 10815613,
     'txt': 14
 }
 ```
@@ -99,19 +99,19 @@ The metainfo.txt file shows metadata about the whole dataset and specifically th
 - chapter
 
 ```
- SPEAKER   |   GENDER   | PARTITION  |  MINUTES   |  BOOK ID   |             TITLE              |            CHAPTER            
+ SPEAKER   |   GENDER   | PARTITION  |  MINUTES   |  BOOK ID   |             TITLE              |            CHAPTER
   10232    |     M      |   secret   |   17.148   |   10057    | Expression of the Emotions in Man and Animals | Ch. II: General Principles of Expression, continued
    9508    |     F      |   secret   |   9.347    |   10105    | Stephen: A Soldier of the Cross | Good Tidings Out of the Desert
-   9508    |     F      |   secret   |   8.123    |   12959    |         Vanished Hand          | CHAPTER II - WHAT WAS WRITTEN 
-  10375    |     M      |   secret   |   10.803   |   10173    | Dutch Fairy Tales for Young Folks |   SANTA KLAAS AND BLACK PETE  
-  10375    |     M      |   secret   |   6.764    |   10244    | Grimm's Fairy Tales - Retold in One-Syllable Words |          Hans in Luck         
+   9508    |     F      |   secret   |   8.123    |   12959    |         Vanished Hand          | CHAPTER II - WHAT WAS WRITTEN
+  10375    |     M      |   secret   |   10.803   |   10173    | Dutch Fairy Tales for Young Folks |   SANTA KLAAS AND BLACK PETE
+  10375    |     M      |   secret   |   6.764    |   10244    | Grimm's Fairy Tales - Retold in One-Syllable Words |          Hans in Luck
   10655    |     M      |   secret   |   17.841   |   10173    | Dutch Fairy Tales for Young Folks | THE FARM THAT RAN AWAY AND CAME BACK
   10454    |     M      |   secret   |   1.782    |   10203    |             Verses             | The Cradle Tomb in Westminster Abbey
-  10454    |     M      |   secret   |   2.316    |   10203    |             Verses             |          Commissioned         
-  10454    |     M      |   secret   |   2.362    |   10335    | Grand'ther Baldwin's Thanksgiving, with Other Ballads and Poems |         Friar Anselmo         
+  10454    |     M      |   secret   |   2.316    |   10203    |             Verses             |          Commissioned
+  10454    |     M      |   secret   |   2.362    |   10335    | Grand'ther Baldwin's Thanksgiving, with Other Ballads and Poems |         Friar Anselmo
 ```
 
-MLS dataset splits ({train, dev, test}) are split into subdirectories, each containing transcripts.txt and segments.txt files. 
+MLS dataset splits ({train, dev, test}) are split into subdirectories, each containing transcripts.txt and segments.txt files.
 
 Each transcripts.txt contains:
 - file identifier
