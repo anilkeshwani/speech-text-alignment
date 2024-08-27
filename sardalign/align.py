@@ -24,6 +24,10 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 
+class AlignmentException(Exception):
+    pass
+
+
 def generate_emissions(
     model: torchaudio.models.Wav2Vec2Model,
     audio_file: str | Path,
@@ -83,6 +87,12 @@ def get_alignments(
     targets = torch.tensor(token_indices, dtype=torch.int32).to(device)
     input_lengths = torch.tensor(emissions.shape[0]).unsqueeze(-1)
     target_lengths = torch.tensor(targets.shape[0]).unsqueeze(-1)
+    if target_lengths > input_lengths:
+        raise AlignmentException(
+            "Targets length is too long for CTC. "
+            f"Found targets length: {target_lengths.item()}, log_probs length: {input_lengths.item()}; "
+            "repeats not considered"
+        )
     path, _ = F.forced_align(emissions.unsqueeze(0), targets.unsqueeze(0), input_lengths, target_lengths, blank=blank)
     path = path.squeeze().to("cpu").tolist()
     segments = merge_repeats(path, {v: k for k, v in dictionary.items()})
