@@ -12,11 +12,11 @@ i.e. `parser.add_argument("--text-key", type=str, required=True, help="Text fiel
 - Write converter script for old datasets containing alignments and DSUs (MLS)
 -> run this converter script
 
-- move segment_tokens.py and align_and_segment.py - as well as possibly others - to ./scripts/auxiliary/ subdirectory or similar
-
-- Rename generate_interleaved_data.py to interleave_data.py
-
+Easy:
+- [x] move segment_tokens.py and align_and_segment.py - as well as possibly others - to ./scripts/auxiliary/ subdirectory or similar
+- [x] Rename generate_interleaved_data.py to interleave_data.py
 - [x] finally: Ensure the pre-commit works and formats - and in particular isorts - everything that has been changed
+
 
 - later: make hubert encoding optional in align_and_hubert_encode.py
 - find a better name for align_and_hubert_encode.py

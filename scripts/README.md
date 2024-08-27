@@ -1,4 +1,4 @@
-# Scripts
+# Core Scripts
 
 Usage instructions and example CLI calls for scripts.
 
@@ -10,34 +10,10 @@ Note: For convenience, on the research lab's server, I have a _home away from ho
 export HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows flexible relative paths
 ```
 
-## HuBERT Featurization
-
-```bash
-./scripts/dump_hubert_feature.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl" \
-    --audio-dir "${HAFH}/data/MLS/mls_english/dev/audio" \
-    --ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
-    --layer 6 \
-    --feat-dir "${HAFH}/tmp/hubert_features_test/"
-```
-
-## Speech-Text Alignment
-
-These alignments are at the word or token level.
-
-```bash
-./scripts/segment_tokens.py \
-    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_existing_files_only.jsonl" \
-    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
-    --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
-    --lang 'eng' \
-    --head 10
-```
-
 ## Text Preprocessing of Raw Datasets: Tokenization, Normalization and Uromanization
 
 ```bash
-./scripts/uromanization_mp.py \
+./scripts/uromanize.py \
     --text-key 'normalized_text' \
     '/mnt/scratch-artemis/anilkeshwani/data/voxpopuli_hf/VoxPopuli.jsonl'
 ```
@@ -78,20 +54,39 @@ The `--head ${num_lines}` option can be passed to run a test using only the top 
 ```bash
 HAFH='/mnt/scratch-artemis/anilkeshwani'
 
-./scripts/generate_interleaved_data.py \
+./scripts/interleave.py \
     "${HAFH}/tmp/MLS/mls_english/train/head_transcripts_stratified_sample_2702009_uroman_shard_0_aligned_hubert.jsonl"
 ```
 
-### MLS EDA
+# Auxiliary Scripts
+
+## HuBERT Featurization
 
 ```bash
-./scripts/mls/eda.py \
-    /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_2702009.jsonl \
-    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
-    --hist-dir "${HAFH}/speech-text-alignment/docs/assets/"
+./scripts/dump_hubert_feature.py \
+    --jsonl "${HAFH}/data/MLS/mls_english/dev/transcripts.jsonl" \
+    --audio-dir "${HAFH}/data/MLS/mls_english/dev/audio" \
+    --ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
+    --layer 6 \
+    --feat-dir "${HAFH}/tmp/hubert_features_test/"
 ```
 
-### Resample an Audio File (single file; Python)
+## Segmenting Speech Audio by Tokens via Speech-Text Alignment
+
+These alignments are at the word or token level.
+
+```bash
+./scripts/segment_tokens.py \
+    --jsonl "${HAFH}/data/MLS/mls_english/train/transcripts_stratified_sample_2702009_uroman_existing_files_only.jsonl" \
+    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
+    --out-dir "${HAFH}/tmp/MLS/mls_english/train/audio_segmented" \
+    --lang 'eng' \
+    --head 10
+```
+
+## Resample an Audio File
+
+Note that this can be done more simply for multiple files via FFmpeg using the Bash snippet below.
 
 ```
 usage: resample_audio_file.py [-h] -f FILE [-o OUTPUT] -t TARGET_SAMPLE_RATE
@@ -105,24 +100,9 @@ options:
                         Target sampling rate
 ```
 
-### Resample Audio Files with Parallel (multiple files; GNU Parallel and FFmpeg CLI)
+# Snippets
 
-Place all input files into a directory (`IN_DIR`). Set the arguments:
-
-```bash
-IN_DIR='/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs'
-OUT_DIR='/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000_7'
-TARGET_SR=16000
-N_JOBS=32
-```
-
-Run:
-
-```bash
-./resample_audio_files_ffmpeg_parallel.sh
-```
-
-##
+## Resample Audio Files in parallel with FFmpeg and GNU Parallel
 
 Replace the input and output directories (in this case `/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs` and `/mnt/scratch-artemis/anilkeshwani/towerspeech/LJSpeech-1.1/wavs_16000_7`) with appropriate paths.
 

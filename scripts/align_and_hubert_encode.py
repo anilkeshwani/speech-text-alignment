@@ -73,10 +73,6 @@ def parse_args() -> Namespace:
     parser.add_argument("--head", type=int, default=None, help="Use only head samples of the dataset; for testing")
     # MMS Aligner parameters
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
-    # TODO remove the keys are argparse arguments and move them into constants, like speech tokens and alignment keys
-    parser.add_argument(
-        "--text-key", type=str, default=TEXT_KEY_DEFAULT, help="Key of text field in JSON lines manifest"
-    )
     parser.add_argument("--use-star", action="store_true", help="Use star at the start of transcript")
     # HuBERT parameters
     parser.add_argument("--hubert-ckpt-path", type=str, required=True, help="Path to HuBERT checkpoint")

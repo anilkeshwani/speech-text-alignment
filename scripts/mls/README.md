@@ -27,10 +27,11 @@ Can optionally pass a `--output-jsonl` to specify where the output will be saved
     /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_0.25.jsonl
 ```
 
-## Uromanization
+### MLS EDA
 
 ```bash
-./scripts/mls/uromanization_mp.py \
+./scripts/mls/eda.py \
     /mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/train/transcripts_stratified_sample_2702009.jsonl \
-    --n-processes 64
+    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
+    --hist-dir "${HAFH}/speech-text-alignment/docs/assets/"
 ```
