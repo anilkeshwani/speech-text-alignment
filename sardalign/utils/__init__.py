@@ -65,13 +65,16 @@ def read_jsonl(jsonl: Path, mode: str = "r", encoding: str = "utf-8") -> list[di
         return [json.loads(line) for line in tqdm(f, desc=f"Reading data from {jsonl!s}")]
 
 
-def count_lines(file: Path | str, max_bytes_to_check: int = 32):
+def count_lines(file: Path | str, max_bytes_to_check: int = len(b"\n")) -> int:
     with open(file, mode="rb") as f:
+        _current_stream_position = f.tell()
+        if f.seek(0, os.SEEK_END) < max_bytes_to_check:
+            raise ValueError(f"Input file is too small (checking up to {max_bytes_to_check} bytes): {file!s}")
         f.seek(-max_bytes_to_check, os.SEEK_END)
         data = f.read(max_bytes_to_check)
         if not data.endswith(b"\n"):
             raise ValueError(f"Input file is not terminated with a trailing newline: {file!s}")
-        f.seek(0)
+        f.seek(_current_stream_position)
         return sum(1 for _ in f)
 
 
