@@ -32,6 +32,7 @@ ALIGNMENT_END_TIME_KEY: str = "aligned_token_end_time"  # key for text token-aud
 ALIGNMENT_KEY: str = "alignment"  # TODO remove - deprecated for HF datasets compatibility
 
 # Dataset Processing > HuBERT (DSU) and multimodalality textual representation
+# TODO Replace with PUA codepoints (characters) inc. modality tokens
 HUBERT_TOKEN_FSTRING: str = "<extra_id_{}>"
 MODALITY_TOKEN_SPEECH: str = "<extra_id_MM_SPEECH>"
 MODALITY_TOKEN_TEXT: str = "<extra_id_MM_TEXT>"
