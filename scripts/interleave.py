@@ -21,7 +21,6 @@ from sardalign.constants import (
     SAMPLING_FREQ,
     SEED,
     SPEECH_TOKENS_KEY,
-    TEXT_KEY_DEFAULT,
     TOKEN_DELIMITER_DEFAULT,
     TOKENIZED_KEY,
 )

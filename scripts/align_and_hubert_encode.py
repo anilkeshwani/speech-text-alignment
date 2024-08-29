@@ -19,7 +19,6 @@ from sardalign.constants import (
     NORMALIZED_KEY,
     SPEECH_TOKENS_KEY,
     STAR_TOKEN,
-    TEXT_KEY_DEFAULT,
     TOKENIZED_KEY,
     UROMAN_KEY,
 )

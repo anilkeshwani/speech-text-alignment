@@ -11,14 +11,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import (
-    NORMALIZED_KEY,
-    PROJECT_ROOT,
-    TEXT_KEY_DEFAULT,
-    TOKEN_DELIMITER_DEFAULT,
-    TOKENIZED_KEY,
-    UROMAN_KEY,
-)
+from sardalign.constants import NORMALIZED_KEY, PROJECT_ROOT, TOKEN_DELIMITER_DEFAULT, TOKENIZED_KEY, UROMAN_KEY
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import read_jsonl, write_jsonl
 from sardalign.utils.uroman import post_process_uroman, RomFormat, Uroman

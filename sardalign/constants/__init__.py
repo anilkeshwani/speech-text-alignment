@@ -21,7 +21,6 @@ HUBERT_DOWNSAMPLING_RATIO: int = 320
 TOKEN_DELIMITER_DEFAULT: str | None = None  # None induces str.split to split on any whitespace
 
 # Dataset Processing > JSON lines manifest keys
-TEXT_KEY_DEFAULT: str = "transcript"  # key for text transcripts (pre-tokenization)
 TOKENIZED_KEY: str = "tokenized"  # key for tokenized text (array of strings)
 NORMALIZED_KEY: str = "normalized"  # key for normalized text (array of strings)
 UROMAN_KEY: str = "uroman"  # key for uroman tokens (array of strings)
@@ -29,7 +28,9 @@ SPEECH_TOKENS_KEY: str = "speech_tokens"  # key for speech tokens ("DSUs")
 ALIGNMENT_START_TIME_KEY: str = "aligned_token_start_time"  # key for text token-audio alignments
 ALIGNMENT_END_TIME_KEY: str = "aligned_token_end_time"  # key for text token-audio alignments
 
-ALIGNMENT_KEY: str = "alignment"  # TODO remove - deprecated for HF datasets compatibility
+# Deprecated (retained for backwards compatibility in some scripts e.g. benchmarking)
+TEXT_KEY_DEFAULT: str = "transcript"  # key of text field in raw filelists ("transcript" chosen due to MLS)
+ALIGNMENT_KEY: str = "alignment"  # deprecated for HF datasets compatibility
 
 # Dataset Processing > HuBERT (DSU) and multimodalality textual representation
 # TODO Replace with PUA codepoints (characters) inc. modality tokens

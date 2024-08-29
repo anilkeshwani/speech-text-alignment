@@ -19,11 +19,11 @@ from sardalign.utils.align import get_spans, get_uroman_tokens, load_mms_aligner
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--jsonl", type=Path, required=True, help="Path to input JSON lines file")
+    parser.add_argument("--text-key", type=str, required=True, help="Key of text field in JSON lines manifest")
     parser.add_argument("--audio-dir", type=Path, help="Path to audio directory")
     parser.add_argument("--suffix", type=str, default=".flac", help="File extension for audio files")
     parser.add_argument("--out-dir", type=Path, required=True, help="Output directory for segmented audio files")
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
-    parser.add_argument("--text-key", type=str, default="transcript", help="Key of text field in JSON lines manifest")
     parser.add_argument(
         "--token-delimiter",
         type=str,
