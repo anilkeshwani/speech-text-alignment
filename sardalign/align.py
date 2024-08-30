@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from itertools import groupby
 from pathlib import Path
 
 import sox
@@ -87,7 +88,10 @@ def get_alignments(
     targets = torch.tensor(token_indices, dtype=torch.int32).to(device)
     input_lengths = torch.tensor(emissions.shape[0]).unsqueeze(-1)
     target_lengths = torch.tensor(targets.shape[0]).unsqueeze(-1)
-    if target_lengths > input_lengths:
+    # sum consecutive repeats -> validate targets + repeats <= logprobs condition to run CTC forced alignment
+    str_grpd_by_tkn = ((k, sum(1 for _ in g)) for k, g in groupby(token_indices))
+    n_repeats = sum(cnt - 1 for k, cnt in str_grpd_by_tkn if cnt > 1)
+    if target_lengths + n_repeats > input_lengths:
         raise AlignmentException(
             "Targets length is too long for CTC. "
             f"Found targets length: {target_lengths.item()}, log_probs length: {input_lengths.item()}; "
