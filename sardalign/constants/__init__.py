@@ -29,14 +29,17 @@ ALIGNMENT_START_TIME_KEY: str = "aligned_token_start_time"  # key for text token
 ALIGNMENT_END_TIME_KEY: str = "aligned_token_end_time"  # key for text token-audio alignments
 
 # Deprecated (retained for backwards compatibility in some scripts e.g. benchmarking)
-TEXT_KEY_DEFAULT: str = "transcript"  # key of text field in raw filelists ("transcript" chosen due to MLS)
 ALIGNMENT_KEY: str = "alignment"  # deprecated for HF datasets compatibility
 
 # Dataset Processing > HuBERT (DSU) and multimodalality textual representation
-# TODO Replace with PUA codepoints (characters) inc. modality tokens
 HUBERT_TOKEN_FSTRING: str = "<extra_id_{}>"
 MODALITY_TOKEN_SPEECH: str = "<extra_id_MM_SPEECH>"
 MODALITY_TOKEN_TEXT: str = "<extra_id_MM_TEXT>"
+
+# Private use area (PUA) See: https://learn.microsoft.com/en-gb/globalization/encoding/pua
+# TODO Add support for use of PUA codepoints inc. for modality tokens in place of DSUs as f-strings
+PUA_START = 983_040  # int('0xF0000', base=16)
+PUA_END = 1_048_573  # int("0xFFFFD", base=16)
 
 # Megatron
 MEGATRON_TEXT_KEY: str = "text"
