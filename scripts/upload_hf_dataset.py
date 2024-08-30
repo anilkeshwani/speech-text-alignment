@@ -95,10 +95,8 @@ def main(
     LOGGER.info(f"Repo visibility: " + ("Private" if private else "Public"))
     # NOTE push_to_hub: split defaults to self.split; private does not affect existing repo
     ds.push_to_hub(repo_id, commit_message=commit_message)
-    split_name = ds.split._name
-    LOGGER.info(
-        f"Completed upload of dataset to {repo_id} (split: {split_name}). Link: {HF_DATASETS_BASE_URL}/{repo_id}"
-    )
+    LOGGER.info(f"Completed upload of dataset to {repo_id} (split: {ds.split._name}). ")
+    LOGGER.info(f"Link: {HF_DATASETS_BASE_URL}/{repo_id}")
 
 
 if __name__ == "__main__":
