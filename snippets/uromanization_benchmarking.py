@@ -12,7 +12,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from sardalign.constants import PROJECT_ROOT, TEXT_KEY_DEFAULT, TOKEN_DELIMITER_DEFAULT
+from sardalign.constants import PROJECT_ROOT, TOKEN_DELIMITER_DEFAULT
 from sardalign.text_normalization import text_normalize
 from sardalign.utils import read_jsonl, write_jsonl
 from sardalign.utils.align import get_uroman_tokens
@@ -24,7 +24,7 @@ def parse_args() -> Namespace:
     parser.add_argument("--jsonl", type=Path, required=True, help="Path to input JSON lines file")
     parser.add_argument("--out-dir", type=Path, required=True, help="Output directory")
     parser.add_argument("--lang", type=str, default="eng", help="ISO code of the language")
-    parser.add_argument("--text-key", type=str, default=TEXT_KEY_DEFAULT, help="Text field key in JSON lines manifest")
+    parser.add_argument("--text-key", type=str, default="transcript", help="Text field key in JSON lines manifest")
     parser.add_argument(
         "--token-delimiter",
         type=str,

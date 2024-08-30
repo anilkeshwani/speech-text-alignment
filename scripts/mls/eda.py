@@ -17,7 +17,7 @@ import sox
 from tqdm import tqdm
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import TEXT_KEY_DEFAULT, TOKEN_DELIMITER_DEFAULT
+from sardalign.constants import TOKEN_DELIMITER_DEFAULT
 from sardalign.utils import mls_id_to_path, read_jsonl
 
 
@@ -96,7 +96,7 @@ def main(jsonl_path: Path, token_delimiter: str | None, audio_dir: Path, assets_
     """
     # token sequence length distribution
     sequence_lens = np.array(
-        [len(s[TEXT_KEY_DEFAULT].strip().split(token_delimiter)) for s in tqdm(dataset, desc="Computing text sequence lengths")]
+        [len(s["transcript"].strip().split(token_delimiter)) for s in tqdm(dataset, desc="Computing text sequence lengths")]
     )
     eda_length_dist(
         sequence_lens,
