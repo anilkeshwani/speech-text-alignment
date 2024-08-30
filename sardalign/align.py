@@ -80,7 +80,7 @@ def get_alignments(
         emissions = torch.cat([emissions, torch.zeros(T, 1).to(device)], dim=1)  # add star entry to dist with zero prob
     # force alignment
     if uroman_tokens:
-        token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]  # TODO ??
+        token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]  # removes spaces
     else:
         raise AlignmentException("Empty transcript for audio-text sample")
     blank = dictionary["<blank>"]
