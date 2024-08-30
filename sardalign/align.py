@@ -82,8 +82,7 @@ def get_alignments(
     if uroman_tokens:
         token_indices = [dictionary[c] for c in " ".join(uroman_tokens).split(" ") if c in dictionary]  # TODO ??
     else:
-        LOGGER.warning(f"Empty transcript for audio file: {audio_file}")
-        token_indices = []
+        raise AlignmentException("Empty transcript for audio-text sample")
     blank = dictionary["<blank>"]
     targets = torch.tensor(token_indices, dtype=torch.int32).to(device)
     input_lengths = torch.tensor(emissions.shape[0]).unsqueeze(-1)
