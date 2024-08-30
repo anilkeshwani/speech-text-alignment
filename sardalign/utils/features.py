@@ -27,6 +27,10 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 
+class HubertLengthError(ValueError):
+    pass
+
+
 def get_shard_range(tot: int, nshard: int, rank: int) -> tuple[int, int]:
     assert rank < nshard and rank >= 0, f"invaid rank/nshard {rank}/{nshard}"
     start = round(tot / nshard * rank)
@@ -167,7 +171,7 @@ class SimpleHubertFeaturizer:
             ValueError: If the audio length exceeds the maximum length specified.
         """
         if x.size(1) > self.max_len:
-            raise ValueError(f"Audio length {x.size(1)} exceeds maximum length {self.max_len}")
+            raise HubertLengthError(f"Audio length {x.size(1)} exceeds maximum length {self.max_len}")
         with torch.no_grad():
             if self.task.cfg.normalize:  # True for pre-trained HuBERT Large (w/ embed_dim = 1_024)
                 x = F.layer_norm(x, x.shape)

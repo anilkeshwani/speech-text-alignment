@@ -11,12 +11,13 @@ import torch
 import torchaudio
 from tqdm import tqdm
 
-from sardalign.align import get_alignments
+from sardalign.align import AlignmentException, get_alignments
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import (
     ALIGNMENT_END_TIME_KEY,
     ALIGNMENT_START_TIME_KEY,
     NORMALIZED_KEY,
+    SAMPLING_FREQ,
     SPEECH_TOKENS_KEY,
     STAR_TOKEN,
     TOKENIZED_KEY,
@@ -25,7 +26,7 @@ from sardalign.constants import (
 from sardalign.dump_km_label import ApplyKmeans
 from sardalign.utils import count_lines, echo_environment_info, get_device, mls_id_to_path, read_jsonl
 from sardalign.utils.align import get_span_times, get_spans, load_mms_aligner_model_and_dict
-from sardalign.utils.features import SimpleHubertFeaturizer
+from sardalign.utils.features import HubertLengthError, SimpleHubertFeaturizer
 
 
 logging.basicConfig(
@@ -131,6 +132,7 @@ def main(args):
         uroman_tokens_s = [[STAR_TOKEN] + uroman_tokens for uroman_tokens in uroman_tokens_s]
 
     # Load HuBERT model via featurizer and k-means model
+    # TODO Make HuBERT encoding optional - wrap in if --encode-hubert
     hubert_featurizer = SimpleHubertFeaturizer(ckpt_path=args.hubert_ckpt_path, layer=args.layer, device=device)
     kmeans = ApplyKmeans(args.km_ckpt_path)
 
@@ -144,20 +146,25 @@ def main(args):
                 audio_path = mls_id_to_path(sample["ID"], audio_dir=args.audio_dir, suffix=args.suffix)
             else:
                 audio_path = Path(sample["path"])
-            segments, stride_ms, wave = get_alignments(
-                audio_path, uroman_tokens, mms_aligner_model, mms_aligner_dict, args.use_star, device
-            )
-            spans = get_spans(uroman_tokens, segments)
-            span_times: list[tuple[float, float]] = [get_span_times(span, stride_ms) for span in spans]
-            assert len(tokens) == len(spans), f"Length mismatch: len(spans)={len(spans)} vs len(tokens)={len(tokens)}"
-            # TODO Make HuBERT encoding optional - simple if required here + CLI argument e.g. --encode-hubert
-            sample |= {SPEECH_TOKENS_KEY: kmeans(hubert_featurizer(wave)).tolist()}
-            sample |= {
-                ALIGNMENT_START_TIME_KEY: [span[0] for span in span_times],
-                ALIGNMENT_END_TIME_KEY: [span[1] for span in span_times],
-            }
-            f.write(json.dumps(sample) + "\n")
-
+            try:
+                segments, stride_ms, wave = get_alignments(
+                    audio_path, uroman_tokens, mms_aligner_model, mms_aligner_dict, args.use_star, device
+                )
+                spans = get_spans(uroman_tokens, segments)
+                span_times: list[tuple[float, float]] = [get_span_times(span, stride_ms) for span in spans]
+                if len(tokens) != len(spans):
+                    raise RuntimeError(f"Length mismatch: len(spans)={len(spans)} vs len(tokens)={len(tokens)}")
+                # TODO Make HuBERT encoding optional - simple if required here + CLI argument e.g. --encode-hubert
+                sample |= {SPEECH_TOKENS_KEY: kmeans(hubert_featurizer(wave)).tolist()}
+                sample |= {
+                    ALIGNMENT_START_TIME_KEY: [span[0] for span in span_times],
+                    ALIGNMENT_END_TIME_KEY: [span[1] for span in span_times],
+                }
+                f.write(json.dumps(sample) + "\n")
+            except AlignmentException as ae:
+                LOGGER.error(f"{type(ae).__name__}: {ae!s}. Skipping {audio_path!s}")
+            except HubertLengthError as hle:
+                LOGGER.error(f"{type(hle).__name__}: {hle!s}. Skipping {audio_path!s}")
     LOGGER.info(f"Wrote {count_lines(args.output_jsonl)} lines to {args.output_jsonl!s}")
 
 
