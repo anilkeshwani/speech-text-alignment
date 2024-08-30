@@ -69,7 +69,9 @@ def count_lines(file: Path | str, max_bytes_to_check: int = len(b"\n")) -> int:
     with open(file, mode="rb") as f:
         _current_stream_position = f.tell()
         if f.seek(0, os.SEEK_END) < max_bytes_to_check:
-            raise ValueError(f"Input file is too small (checking up to {max_bytes_to_check} bytes): {file!s}")
+            raise ValueError(
+                f"Cannot count lines. Input file too small when checking {max_bytes_to_check} bytes: {file!s}"
+            )
         f.seek(-max_bytes_to_check, os.SEEK_END)
         data = f.read(max_bytes_to_check)
         if not data.endswith(b"\n"):
