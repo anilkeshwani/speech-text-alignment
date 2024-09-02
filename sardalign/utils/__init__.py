@@ -9,6 +9,7 @@ import torch
 from tqdm import tqdm
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
+from sardalign.constants import PUA_PL_END, PUA_PL_START
 
 
 logging.basicConfig(
@@ -24,6 +25,13 @@ LOGGER = logging.getLogger(__name__)
 ################################################################################
 # General
 ################################################################################
+
+
+def dsu2pua(idx_dsu: int) -> str:
+    dsu_ord = PUA_PL_START + idx_dsu
+    if dsu_ord > PUA_PL_END:
+        raise RuntimeError(f"DSU ordinal out of PUA range: {idx_dsu}. PUA range: {PUA_PL_START - PUA_PL_END:,}")
+    return chr(dsu_ord)
 
 
 def get_type_mapping(data):
