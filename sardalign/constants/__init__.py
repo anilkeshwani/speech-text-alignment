@@ -43,3 +43,6 @@ PUA_END = 1_048_573  # int("0xFFFFD", base=16)
 
 # Megatron
 MEGATRON_TEXT_KEY: str = "text"
+
+# Model
+BASE_MODEL_DEFAULT: str = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
