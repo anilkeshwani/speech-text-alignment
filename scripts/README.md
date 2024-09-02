@@ -58,12 +58,12 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
     "${HAFH}/tmp/MLS/mls_english/train/head_transcripts_stratified_sample_2702009_uroman_shard_0_aligned_hubert.jsonl"
 ```
 
-### Extending Tokenizer and Model
+### Extending Hugging Face Tokenizer and Model
 
 From a local directory:
 
 ```bash
-./extend_tinyllama_dsus.py \
+./extend_tinyllama_hf_tokenizer_dsus.py.py \
     --pretrained-model-name-or-path '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T/snapshots/036fa4651240b9a1487f709833b9e4b96b4c1574/' \
     --n-dsus 5000 \
     --output-dir '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-5000'
@@ -74,7 +74,7 @@ Note: When using Hugging Face and referencing a local directory path, this must 
 From a Hugging Face repo name:
 
 ```bash
-./extend_tinyllama_dsus.py \
+./extend_tinyllama_hf_tokenizer_dsus.py.py \
     --pretrained-model-name-or-path 'TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T' \
     --n-dsus 5000 \
     --output-dir '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-5000-reponame'
