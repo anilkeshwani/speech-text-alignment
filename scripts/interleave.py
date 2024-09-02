@@ -16,7 +16,6 @@ from sardalign.constants import (
     ALIGNMENT_END_TIME_KEY,
     ALIGNMENT_START_TIME_KEY,
     HUBERT_DOWNSAMPLING_RATIO,
-    HUBERT_TOKEN_FSTRING,
     MEGATRON_TEXT_KEY,
     MODALITY_TOKEN_SPEECH,
     MODALITY_TOKEN_TEXT,
@@ -88,6 +87,7 @@ def interleave_dataset(input_jsonl: Path, output_jsonl: Path, use_modality_token
                 )
                 sp_tkns_spn = speech_tokens[start_idx_hu:end_idx_hu]
                 # TODO add functionality for optional de-duplication of HuBERT speech tokens
+                # TODO refactor for use with PUA chars
                 hubert_spans.append("".join([HUBERT_TOKEN_FSTRING.format(sp_tkn) for sp_tkn in sp_tkns_spn]))
 
             if use_modality_tokens:

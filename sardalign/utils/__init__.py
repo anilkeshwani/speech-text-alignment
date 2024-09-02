@@ -1,11 +1,15 @@
 import json
 import logging
 import os
+import random
 import sys
 from argparse import ArgumentTypeError
 from pathlib import Path
 
+import numpy as np
 import torch
+from torch import Tensor
+from torch.distributions.multivariate_normal import MultivariateNormal
 from tqdm import tqdm
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
@@ -54,6 +58,23 @@ def get_type_mapping(data):
         return [get_type_mapping(item) for item in data]
     else:
         return type(data).__name__
+
+
+def multivariate_normal_from_weights(embeddings: Tensor, sigma_scaling: float = 1e-5) -> MultivariateNormal:
+    mu = torch.mean(embeddings, dim=0)
+    n = embeddings.size(0)
+    sigma = ((embeddings - mu).T @ (embeddings - mu)) / n
+    return MultivariateNormal(mu, covariance_matrix=sigma * sigma_scaling)
+
+
+def seed_everything(seed: int):
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 
 ################################################################################
