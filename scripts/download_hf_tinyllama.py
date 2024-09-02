@@ -8,7 +8,7 @@ from argparse import ArgumentParser, Namespace
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import BASE_MODEL_DEFAULT
+from sardalign.constants.tinyllama import TINYLLAMA_HF_REPO, TINYLLAMA_HF_REVISION
 
 
 # NOTE Script structured to be trivially extensible for use of other base models in future
@@ -29,6 +29,12 @@ def parse_args() -> Namespace:
         "--pretrained_model_name_or_path", type=str, default=None, help="Pretrained Hugging Face model repository name"
     )
     parser.add_argument(
+        "--revision",
+        type=str,
+        default=None,  # TODO when generalising, set default value to "main"
+        help="Revision of the pretrained Hugging Face model (commit ID or branch name)",
+    )
+    parser.add_argument(
         "--no-weights",
         action="store_false",
         dest="download_weights",
@@ -42,17 +48,23 @@ def parse_args() -> Namespace:
     )
     args = parser.parse_args()
     if args.pretrained_model_name_or_path is None:
-        args.pretrained_model_name_or_path = BASE_MODEL_DEFAULT
+        args.pretrained_model_name_or_path = TINYLLAMA_HF_REPO  # TODO remove when using Gemma
         LOGGER.info(f"No Hugging Face repository specified. Using default model: {args.pretrained_model_name_or_path}")
+    if args.revision is None:
+        args.revision = TINYLLAMA_HF_REVISION  # TODO remove when using Gemma
+        LOGGER.info(
+            "No Hugging Face repo revision (commit ID or branch name) specified. "
+            f"Using default model: {args.revision}"
+        )
     return args
 
 
 def main(args: Namespace) -> None:
     if args.download_tokenizer:
-        AutoTokenizer.from_pretrained(args.pretrained_model_name_or_path)
+        AutoTokenizer.from_pretrained(args.pretrained_model_name_or_path, revision=args.revision)
         LOGGER.info(f"Downloaded tokenizer for {args.pretrained_model_name_or_path}")
     if args.download_weights:
-        AutoModelForCausalLM.from_pretrained(args.pretrained_model_name_or_path)
+        AutoModelForCausalLM.from_pretrained(args.pretrained_model_name_or_path, revision=args.revision)
         LOGGER.info(f"Downloaded weights for {args.pretrained_model_name_or_path}")
 
 
