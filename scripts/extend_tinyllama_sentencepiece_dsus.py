@@ -7,11 +7,12 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from sentencepiece import sentencepiece_model_pb2
+from transformers import AutoModelForCausalLM
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import MODALITY_TOKEN_SPEECH, MODALITY_TOKEN_TEXT, SEED
-from sardalign.constants.tinyllama import TINYLLAMA_HF_REPO, TINYLLAMA_HF_REVISION
+from sardalign.constants.tinyllama import SENTENCEPIECE_TOKENIZER_FILENAME
 from sardalign.utils import dsu2pua, multivariate_normal_from_weights, seed_everything
 
 
@@ -29,34 +30,11 @@ LOGGER = logging.getLogger(__file__)
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
+    parser.add_argument("pretrained_dir", type=Path, help="Directory containing the Hugging Face model and tokenizer")
     parser.add_argument(
-        "--output-dir", type=Path, required=True, help="Output directory for the extended model and tokenizer"
+        "--output-dir", type=Path, required=True, help="Output directory for extended model and tokenizer"
     )
     parser.add_argument("--n-dsus", type=int, required=True, help="Number of HuBERT tokens (DSUs) to add")
-    parser.add_argument(
-        "--pretrained-model-name-or-path", type=str, default=None, help="Pretrained Hugging Face model repository name"
-    )
-    parser.add_argument(
-        "--revision",
-        type=str,
-        default=None,  # TODO when generalising, set default value to "main"
-        help="Revision of the pretrained Hugging Face model (commit ID or branch name)",
-    )
-    parser.add_argument(
-        "--no-weights",
-        action="store_false",
-        dest="download_weights",
-        help="Do not download the model weights i.e. download only the tokenizer",
-    )
-    parser.add_argument(
-        "--no-tokenizer",
-        action="store_false",
-        dest="download_tokenizer",
-        help="Do not download the model's tokenizer i.e. download only the model weights",
-    )
-    parser.add_argument(
-        "--use-fast-tokenizer", action="store_true", help="Use a fast Rust-based Hugging Face tokenizer (if available)"
-    )
     parser.add_argument(
         "--no-modality-tokens",
         action="store_false",
@@ -64,45 +42,45 @@ def parse_args() -> Namespace:
         help="Do no prepend special modality tokens to spans of text/speech tokens",
     )
     parser.add_argument("--seed", type=int, default=SEED, help="Random seed")
-    args = parser.parse_args()
-    if args.pretrained_model_name_or_path is None:
-        args.pretrained_model_name_or_path = TINYLLAMA_HF_REPO  # TODO remove when using Gemma
-        LOGGER.info(f"No Hugging Face repository specified. Using default model: {args.pretrained_model_name_or_path}")
-    if args.revision is None:
-        args.revision = TINYLLAMA_HF_REVISION  # TODO remove when using Gemma
-        LOGGER.info(
-            "No Hugging Face repo revision (commit ID or branch name) specified. "
-            f"Using default revision: {args.revision}"
-        )
-    return args
+    return parser.parse_args()
 
 
 def main(args: Namespace) -> None:
+    if not args.pretrained_dir.exists():
+        raise FileNotFoundError(f"Pretrained model directory {args.pretrained_dir} not found. Download artefacts first")
     if args.output_dir.exists():
         raise FileExistsError(f"Output directory {args.output_dir} already exists")
     seed_everything(args.seed)
-    # Download tokenizer and model weights if necessary
-    if args.download_tokenizer:
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.pretrained_model_name_or_path,
-            revision=args.revision,
-            # NOTE Use of slow tokenizer enforces serialisation of underlying SentencePiece model on save_pretrained()
-            use_fast=args.use_fast_tokenizer,
-        )
-        LOGGER.info(f"Downloaded tokenizer for {args.pretrained_model_name_or_path}")
-    if args.download_weights:
-        model = AutoModelForCausalLM.from_pretrained(args.pretrained_model_name_or_path, revision=args.revision)
-        LOGGER.info(f"Downloaded weights for {args.pretrained_model_name_or_path}")
-    # Add new tokens
+    m = sentencepiece_model_pb2.ModelProto()
+    with open(args.pretrained_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "rb") as f:
+        m.ParseFromString(f.read())
     dsu_tokens = [dsu2pua(idx_dsu) for idx_dsu in range(args.n_dsus)]
-    tokenizer.add_tokens(dsu_tokens, special_tokens=False)
+    for token in dsu_tokens:
+        new_token = sentencepiece_model_pb2.ModelProto().SentencePiece()
+        new_token.piece = token
+        new_token.score = 0
+        # new_token.type = 0 # NOTE For future use if needed
+        m.pieces.append(new_token)
     LOGGER.info(f"Added {len(dsu_tokens)} DSU tokens ({dsu_tokens[0]}...{dsu_tokens[-1]}) to tokenizer")
     if args.use_modality_tokens:
-        tokenizer.add_tokens([MODALITY_TOKEN_TEXT, MODALITY_TOKEN_SPEECH], special_tokens=False)
+        modality_tokens = [MODALITY_TOKEN_TEXT, MODALITY_TOKEN_SPEECH]
+        for token in modality_tokens:
+            new_token = sentencepiece_model_pb2.ModelProto().SentencePiece()
+            new_token.piece = token
+            new_token.score = 0
+            # new_token.type = 0 # NOTE For future use if needed
+            m.pieces.append(new_token)
         LOGGER.info(f"Added modality switch tokens to tokenizer: {MODALITY_TOKEN_TEXT, MODALITY_TOKEN_SPEECH}")
+    if not args.output_dir.exists():
+        args.output_dir.mkdir(parents=True)
+    with open(args.output_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "xb") as f:
+        f.write(m.SerializeToString())
+    LOGGER.info(f"Saved SentencePiece tokenizer to {args.output_dir / SENTENCEPIECE_TOKENIZER_FILENAME!s}")
     # Resize model embedding layer
+    model = AutoModelForCausalLM.from_pretrained(args.pretrained_dir)
+    LOGGER.info(f"Looaded weights from {args.pretrained_dir!s}")
     vocab_size_curr = model.config.vocab_size
-    vocab_size_extd = len(tokenizer)
+    vocab_size_extd = len(m.pieces)
     model.resize_token_embeddings(vocab_size_extd)
     n_new_tkns = vocab_size_extd - vocab_size_curr
     LOGGER.info(f"Extended vocab size from {vocab_size_curr} to {vocab_size_extd} with {n_new_tkns} new tokens")
@@ -115,8 +93,7 @@ def main(args: Namespace) -> None:
         mvnorm_output = multivariate_normal_from_weights(output_embeddings.weight)
         output_embeddings.weight.data[vocab_size_curr:] = mvnorm_output.sample(torch.Size((n_new_tkns,)))
     LOGGER.info("Initialized new embedding vectors via multivariate normal of trained embeddings")
-    # Save tokenizer and model weights
-    tokenizer.save_pretrained(args.output_dir)
+    # Save model weights
     model.save_pretrained(args.output_dir)
     LOGGER.info(f"Saved tokenizer and model weights to {args.output_dir}")
 

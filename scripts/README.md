@@ -58,6 +58,15 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
     "${HAFH}/tmp/MLS/mls_english/train/head_transcripts_stratified_sample_2702009_uroman_shard_0_aligned_hubert.jsonl"
 ```
 
+### Extending SentencePiece Tokenizer and Model
+
+```bash
+./extend_tinyllama_sentencepiece_dsus.py \
+    /mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T/snapshots/036fa4651240b9a1487f709833b9e4b96b4c1574/ \
+    --output-dir /mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-sentencepiece-5000 \
+    --n-dsus 5000
+```
+
 ### Extending Hugging Face Tokenizer and Model
 
 From a local directory:
