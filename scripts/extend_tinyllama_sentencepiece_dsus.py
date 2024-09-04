@@ -8,10 +8,12 @@ from pathlib import Path
 
 import torch
 from sentencepiece import sentencepiece_model_pb2
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, PreTrainedModel
+from transformers.configuration_utils import PretrainedConfig
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import MODALITY_TOKEN_SPEECH, MODALITY_TOKEN_TEXT, SEED
+from sardalign.constants.megatron import MAKE_VOCAB_SIZE_DIVISIBLE_BY
 from sardalign.constants.tinyllama import SENTENCEPIECE_TOKENIZER_FILENAME
 from sardalign.utils import dsu2pua, multivariate_normal_from_weights, seed_everything
 
@@ -26,6 +28,14 @@ logging.basicConfig(
 )
 
 LOGGER = logging.getLogger(__file__)
+
+
+def get_hf_config_embedding_size(config: PretrainedConfig) -> int:
+    if not isinstance(config, PretrainedConfig):
+        raise TypeError(f"Expected PretrainedConfig, got {type(config)}")
+    if hasattr(config, "embedding_size"):
+        return config.embedding_size
+    return config.hidden_size
 
 
 def parse_args() -> Namespace:
@@ -54,6 +64,7 @@ def main(args: Namespace) -> None:
     m = sentencepiece_model_pb2.ModelProto()
     with open(args.pretrained_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "rb") as f:
         m.ParseFromString(f.read())
+    vocab_size_curr = len(m.pieces)
     dsu_tokens = [dsu2pua(idx_dsu) for idx_dsu in range(args.n_dsus)]
     for token in dsu_tokens:
         new_token = sentencepiece_model_pb2.ModelProto().SentencePiece()
@@ -75,24 +86,33 @@ def main(args: Namespace) -> None:
         args.output_dir.mkdir(parents=True)
     with open(args.output_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "xb") as f:
         f.write(m.SerializeToString())
+    vocab_size_extd = len(m.pieces)
+    n_new_tkns = vocab_size_extd - vocab_size_curr
+    LOGGER.info(f"Extended tokenizer vocab size from {vocab_size_curr} to {vocab_size_extd} ({n_new_tkns} new tokens)")
     LOGGER.info(f"Saved SentencePiece tokenizer to {args.output_dir / SENTENCEPIECE_TOKENIZER_FILENAME!s}")
     # Resize model embedding layer
-    model = AutoModelForCausalLM.from_pretrained(args.pretrained_dir)
+    model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(args.pretrained_dir)
     LOGGER.info(f"Looaded weights from {args.pretrained_dir!s}")
-    vocab_size_curr = model.config.vocab_size
-    vocab_size_extd = len(m.pieces)
-    model.resize_token_embeddings(vocab_size_extd)
-    n_new_tkns = vocab_size_extd - vocab_size_curr
-    LOGGER.info(f"Extended vocab size from {vocab_size_curr} to {vocab_size_extd} with {n_new_tkns} new tokens")
-    # Initialize new embeddings as normal vectors with mean equal to current embeddings' mean
+    if vocab_size_curr != model.config.vocab_size:
+        raise AssertionError(f"Vocab size mismatch model vs tokenizer: {vocab_size_curr} != {model.config.vocab_size}")
+    n_pad_embd_vctrs = MAKE_VOCAB_SIZE_DIVISIBLE_BY - (vocab_size_extd % MAKE_VOCAB_SIZE_DIVISIBLE_BY)
+    model.resize_token_embeddings(vocab_size_extd, pad_to_multiple_of=MAKE_VOCAB_SIZE_DIVISIBLE_BY)
+    n_new_emb_vctrs = model.config.vocab_size - vocab_size_curr
+    embed_dim = get_hf_config_embedding_size(model.config)
+    # Initialize new token embeddings as normal vectors with mean equal to current embeddings' mean
     with torch.no_grad():
+        new_pads_embed_init = torch.full((n_pad_embd_vctrs, embed_dim), torch.nan)  # init padding vectors as NaN
         input_embeddings = model.get_input_embeddings()
         mvnorm_input = multivariate_normal_from_weights(input_embeddings.weight)
-        input_embeddings.weight.data[vocab_size_curr:] = mvnorm_input.sample(torch.Size((n_new_tkns,)))
+        new_tkns_embed_init = mvnorm_input.sample(torch.Size((n_new_tkns,)))
+        input_embeddings.weight.data[vocab_size_curr:] = torch.cat((new_tkns_embed_init, new_pads_embed_init))
         output_embeddings = model.get_output_embeddings()
         mvnorm_output = multivariate_normal_from_weights(output_embeddings.weight)
-        output_embeddings.weight.data[vocab_size_curr:] = mvnorm_output.sample(torch.Size((n_new_tkns,)))
+        new_tkns_embed_init = mvnorm_output.sample(torch.Size((n_new_tkns,)))  # resample new multivariate Gaussians
+        output_embeddings.weight.data[vocab_size_curr:] = torch.cat((new_tkns_embed_init, new_pads_embed_init))
     LOGGER.info("Initialized new embedding vectors via multivariate normal of trained embeddings")
+    LOGGER.info(f"Extended embedding layer from {vocab_size_curr} to {model.config.vocab_size}")
+    LOGGER.info(f"Added {n_new_emb_vctrs} new embedding vectors: {n_new_tkns} trained and {n_new_emb_vctrs} padding")
     # Save model weights
     model.save_pretrained(args.output_dir)
     LOGGER.info(f"Saved tokenizer and model weights to {args.output_dir}")

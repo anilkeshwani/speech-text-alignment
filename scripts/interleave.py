@@ -16,7 +16,6 @@ from sardalign.constants import (
     ALIGNMENT_END_TIME_KEY,
     ALIGNMENT_START_TIME_KEY,
     HUBERT_DOWNSAMPLING_RATIO,
-    MEGATRON_TEXT_KEY,
     MODALITY_TOKEN_SPEECH,
     MODALITY_TOKEN_TEXT,
     SAMPLING_FREQ,
@@ -24,6 +23,7 @@ from sardalign.constants import (
     SPEECH_TOKENS_KEY,
     TOKENIZED_KEY,
 )
+from sardalign.constants.megatron import MEGATRON_TEXT_KEY
 from sardalign.utils import count_lines, dsu2pua
 from sardalign.utils.align import times_to_hubert_idxs
 

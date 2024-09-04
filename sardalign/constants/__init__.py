@@ -41,6 +41,3 @@ PUA_PL_END: int = 1_048_573  # int("0xFFFFD", base=16)
 # Dataset Processing > HuBERT (DSU) and multimodalality textual representation
 MODALITY_TOKEN_SPEECH: str = chr(PUA_BMP_START)
 MODALITY_TOKEN_TEXT: str = chr(PUA_BMP_START + 1)
-
-# Megatron
-MEGATRON_TEXT_KEY: str = "text"
