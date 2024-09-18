@@ -67,6 +67,10 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
     --n-dsus 5000
 ```
 
+### Checkpoint Conversion: Hugging Face to Megatron
+
+See [Megatron-LM codebase](https://github.com/anilkeshwani/megatron-llm-deepspin) (EPFL fork) for [HF-Megatron weight conversion scripts](https://github.com/anilkeshwani/megatron-llm-deepspin/tree/main/weights_conversion) (both directions).
+
 # Auxiliary Scripts
 
 ## HuBERT Featurization
