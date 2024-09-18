@@ -67,28 +67,6 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
     --n-dsus 5000
 ```
 
-### Extending Hugging Face Tokenizer and Model
-
-From a local directory:
-
-```bash
-./extend_tinyllama_hf_tokenizer_dsus.py.py \
-    --pretrained-model-name-or-path '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T/snapshots/036fa4651240b9a1487f709833b9e4b96b4c1574/' \
-    --n-dsus 5000 \
-    --output-dir '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-5000'
-```
-
-Note: When using Hugging Face and referencing a local directory path, this must be the innermost path - i.e. referencing the model and individual revision within the `snapshots` directory (usually containing symlinks pointing to relative paths in an adjacent `blobs` directory).
-
-From a Hugging Face repo name:
-
-```bash
-./extend_tinyllama_hf_tokenizer_dsus.py.py \
-    --pretrained-model-name-or-path 'TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T' \
-    --n-dsus 5000 \
-    --output-dir '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-5000-reponame'
-```
-
 # Auxiliary Scripts
 
 ## HuBERT Featurization
@@ -129,6 +107,28 @@ options:
                         Path to output resampled audio file
   -t TARGET_SAMPLE_RATE, --target-sample-rate TARGET_SAMPLE_RATE
                         Target sampling rate
+```
+
+### Extending Hugging Face Tokenizer and Model
+
+From a local directory:
+
+```bash
+./extend_tinyllama_hf_tokenizer_dsus.py.py \
+    --pretrained-model-name-or-path '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T/snapshots/036fa4651240b9a1487f709833b9e4b96b4c1574/' \
+    --n-dsus 5000 \
+    --output-dir '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-5000'
+```
+
+Note: When using Hugging Face and referencing a local directory path, this must be the innermost path - i.e. referencing the model and individual revision within the `snapshots` directory (usually containing symlinks pointing to relative paths in an adjacent `blobs` directory).
+
+From a Hugging Face repo name:
+
+```bash
+./extend_tinyllama_hf_tokenizer_dsus.py.py \
+    --pretrained-model-name-or-path 'TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T' \
+    --n-dsus 5000 \
+    --output-dir '/mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-5000-reponame'
 ```
 
 # Snippets
