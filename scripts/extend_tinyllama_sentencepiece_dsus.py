@@ -31,6 +31,15 @@ LOGGER = logging.getLogger(__file__)
 
 
 def get_hf_config_embedding_size(config: PretrainedConfig) -> int:
+    """
+    Extract embedding size from a Hugging Face config.
+
+    Args:
+        config (PretrainedConfig): Hugging Face config.
+
+    Returns:
+        int: Embedding size from the config. Uses `embedding_size` attribute if present (e.g. ALBERT) else `hidden_size`
+    """
     if not isinstance(config, PretrainedConfig):
         raise TypeError(f"Expected PretrainedConfig, got {type(config)}")
     if hasattr(config, "embedding_size"):
@@ -40,7 +49,13 @@ def get_hf_config_embedding_size(config: PretrainedConfig) -> int:
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("pretrained_dir", type=Path, help="Directory containing the Hugging Face model and tokenizer")
+    parser.add_argument(
+        "pretrained_dir",
+        type=Path,
+        help="Directory containing the Hugging Face model and tokenizer. "
+        r"Should be the LFS commit directory of the HF repo e.g. ${HAFH}/"
+        "models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T/snapshots/036fa4651240b9a1487f709833b9e4b96b4c1574/",
+    )
     parser.add_argument(
         "--output-dir", type=Path, required=True, help="Output directory for extended model and tokenizer"
     )
@@ -101,15 +116,17 @@ def main(args: Namespace) -> None:
     embed_dim = get_hf_config_embedding_size(model.config)
     # Initialize new token embeddings as normal vectors with mean equal to current embeddings' mean
     with torch.no_grad():
-        new_pads_embed_init = torch.full((n_pad_embd_vctrs, embed_dim), torch.nan)  # init padding vectors as NaN
+        # input embedding layer -> init input padding vectors as NaN; should never be accessed/propagated through model
+        new_pads_embed_init = torch.full((n_pad_embd_vctrs, embed_dim), torch.nan)
         input_embeddings = model.get_input_embeddings()
         mvnorm_input = multivariate_normal_from_weights(input_embeddings.weight)
         new_tkns_embed_init = mvnorm_input.sample(torch.Size((n_new_tkns,)))
         input_embeddings.weight.data[vocab_size_curr:] = torch.cat((new_tkns_embed_init, new_pads_embed_init))
+        # output embedding layer (no weight tying) -> init all new vectors as MV Gaussian
         output_embeddings = model.get_output_embeddings()
         mvnorm_output = multivariate_normal_from_weights(output_embeddings.weight)
-        new_tkns_embed_init = mvnorm_output.sample(torch.Size((n_new_tkns,)))  # resample new multivariate Gaussians
-        output_embeddings.weight.data[vocab_size_curr:] = torch.cat((new_tkns_embed_init, new_pads_embed_init))
+        new_tkns_embed_init = mvnorm_output.sample(torch.Size((n_new_emb_vctrs,)))  # resample new multivar. Gaussians
+        output_embeddings.weight.data[vocab_size_curr:] = new_tkns_embed_init
     LOGGER.info("Initialized new embedding vectors via multivariate normal of trained embeddings")
     LOGGER.info(f"Extended embedding layer from {vocab_size_curr} to {model.config.vocab_size}")
     LOGGER.info(f"Added {n_new_emb_vctrs} new embedding vectors: {n_new_tkns} trained and {n_new_emb_vctrs} padding")
