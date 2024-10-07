@@ -34,7 +34,7 @@ These alignments are at the word or token level.
     --km-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/kmeans_model/3datsets_combined_kmeans_5000'
 ```
 
-Example for **MLS**, which uses IDs its JSON lines manifest (filelist) not paths.
+Example for **MLS**, which uses IDs in its JSON lines manifest (filelist) not paths.
 
 ```bash
 ./scripts/align_and_hubert_encode.py \
