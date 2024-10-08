@@ -83,7 +83,8 @@ def main(args: Namespace):
         for s in test_data
     ]
     sampling_params = SamplingParams(
-        temperature=0.0,  # 0.8
+        n=10,  # 1
+        temperature=1.0,  # 0.8
         top_p=1,  # default is 1; nucleus sampling probability set to 0.95 in vLLM docs; NOTE sum_k(prob) >= p
         max_tokens=128,
         stop=[],  # TODO DEBUG
@@ -93,13 +94,13 @@ def main(args: Namespace):
     llm = LLM(model=args.model, tokenizer_mode=args.tokenizer_mode)
     outputs = llm.generate(prompts, sampling_params=sampling_params, use_tqdm=True)
     # NOTE the outputs attr of a RequestOutput object is a **list** of CompletionOutput objects
-    model_generations: list[CompletionOutput] = [output.outputs[0] for output in outputs]  # NOTE "outputs" list attr
-    observability_metrics: list[RequestMetrics | None] = [output.metrics for output in outputs]  # NOTE "metrics" attr
+    model_generations_s: list[list[CompletionOutput]] = [output.outputs for output in outputs]  # "outputs" list attr
+    observability_metrics: list[RequestMetrics | None] = [output.metrics for output in outputs]  # "metrics" attr
     outputs_json_serialisable = []
-    for output, generation, observability in zip(outputs, model_generations, observability_metrics):
+    for output, generations, observability in zip(outputs, model_generations_s, observability_metrics):
         outputs_json_serialisable.append(
             {k: v for k, v in vars(output).items() if k not in ("outputs", "metrics")}
-            | {"outputs": vars(generation)}
+            | {"outputs": [vars(generation) for generation in generations]}
             | {"metrics": vars(observability)}
         )
     write_jsonl(args.output_jsonl, outputs_json_serialisable)
