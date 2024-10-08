@@ -1,17 +1,32 @@
 #!/usr/bin/env python
 
+import logging
+import os
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import jinja2
+from regex import F
 from transformers.models.whisper.english_normalizer import BasicTextNormalizer
-from vllm import LLM, SamplingParams
+from vllm import CompletionOutput, LLM, RequestOutput, SamplingParams
+from vllm.sequence import RequestMetrics
 
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import MODALITY_TOKEN_SPEECH, MODALITY_TOKEN_TEXT, SPEECH_TOKENS_KEY
 from sardalign.utils import dsu2pua, read_jsonl, write_jsonl
 
 
 PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"  # TODO refactor / relocate
+
+logging.basicConfig(
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
+    stream=sys.stdout,
+)
+
+LOGGER = logging.getLogger(__file__)
 
 
 def parse_args() -> Namespace:
@@ -22,8 +37,13 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--test-jsonl", required=True, type=Path, help="Test JSON lines file containing text and DSU fields"
     )
-    parser.add_argument("--text-key", type=str, required=True, help="Text field key in *input* JSON lines file")
     parser.add_argument("--output-jsonl", type=Path, required=True, help="Path for model outputs JSON lines file")
+    parser.add_argument(
+        "--text-key",
+        type=str,
+        required=True,
+        help="Text field key in input JSON lines file. Used as the ASR reference transcription",
+    )
     parser.add_argument(
         "--tokenizer-mode",
         type=str,
@@ -47,6 +67,8 @@ def parse_args() -> Namespace:
 
 
 def main(args: Namespace):
+    if args.output_jsonl.exists():
+        raise FileExistsError(f"Output JSON lines file {args.output_jsonl!s} exists.")
     test_data = read_jsonl(args.test_jsonl)
     jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(PROMPT_TEMPLATES_DIR))
     prompt_template = jinja_env.get_template(args.prompt_template)
@@ -62,20 +84,26 @@ def main(args: Namespace):
     ]
     sampling_params = SamplingParams(
         temperature=0.0,  # 0.8
-        top_p=1,  # default is 1; nucleus sampling probability set to 0.95 in vLLM docs
+        top_p=1,  # default is 1; nucleus sampling probability set to 0.95 in vLLM docs; NOTE sum_k(prob) >= p
         max_tokens=128,
+        stop=[],  # TODO DEBUG
+        # stop=[r"<\s>"],  # TODO DEBUG
         # stop=[r"<\s>", "\n"],
     )
     llm = LLM(model=args.model, tokenizer_mode=args.tokenizer_mode)
     outputs = llm.generate(prompts, sampling_params=sampling_params, use_tqdm=True)
     # NOTE the outputs attr of a RequestOutput object is a **list** of CompletionOutput objects
-    model_generations = [vars(output.outputs[0]) for output in outputs]
-    write_jsonl(
-        args.output_jsonl.with_stem(args.output_jsonl.stem + "detailed"),
-        [{k: v for k, v in vars(output).items() if k not in ("outputs", "metrics")} for output in outputs],
-        mode="w",
-    )
-    write_jsonl(args.output_jsonl, model_generations, mode="w")
+    model_generations: list[CompletionOutput] = [output.outputs[0] for output in outputs]  # NOTE "outputs" list attr
+    observability_metrics: list[RequestMetrics | None] = [output.metrics for output in outputs]  # NOTE "metrics" attr
+    outputs_json_serialisable = []
+    for output, generation, observability in zip(outputs, model_generations, observability_metrics):
+        outputs_json_serialisable.append(
+            {k: v for k, v in vars(output).items() if k not in ("outputs", "metrics")}
+            | {"outputs": vars(generation)}
+            | {"metrics": vars(observability)}
+        )
+    write_jsonl(args.output_jsonl, outputs_json_serialisable)
+    LOGGER.info(f"Wrote outputs to {args.output_jsonl!s}")
 
 
 if __name__ == "__main__":

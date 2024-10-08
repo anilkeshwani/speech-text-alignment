@@ -8,7 +8,7 @@
     --test-jsonl "/tmp/dummy.jsonl" \
     --text-key "text" \
     --output-jsonl '/tmp/dummy_out.jsonl' \
-    --prompt-template 'basic'
+    --prompt-template 'capital_of_france'
 ```
 
 ```bash
