@@ -28,6 +28,9 @@ SPEECH_TOKENS_KEY: str = "speech_tokens"  # key for speech tokens ("DSUs")
 ALIGNMENT_START_TIME_KEY: str = "aligned_token_start_time"  # key for text token-audio alignments
 ALIGNMENT_END_TIME_KEY: str = "aligned_token_end_time"  # key for text token-audio alignments
 
+# Dataset Processing > Dataset Formatting
+PROMPT_TEMPLATES_DIR = PROJECT_ROOT / "prompt_templates"
+
 # Deprecated (retained for backwards compatibility in some scripts e.g. benchmarking)
 ALIGNMENT_KEY: str = "alignment"  # deprecated for HF datasets compatibility
 

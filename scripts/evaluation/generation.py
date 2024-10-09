@@ -12,11 +12,9 @@ from vllm import CompletionOutput, LLM, RequestOutput, SamplingParams
 from vllm.sequence import RequestMetrics
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.constants import MODALITY_TOKEN_SPEECH, MODALITY_TOKEN_TEXT, SPEECH_TOKENS_KEY
+from sardalign.constants import MODALITY_TOKEN_SPEECH, MODALITY_TOKEN_TEXT, PROMPT_TEMPLATES_DIR, SPEECH_TOKENS_KEY
 from sardalign.utils import dsu2pua, read_jsonl, write_jsonl
 
-
-PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"  # TODO refactor / relocate
 
 logging.basicConfig(
     format=LOG_FORMAT,
