@@ -49,7 +49,7 @@ Example for **MLS**, which uses IDs in its JSON lines manifest (filelist) not pa
 
 The `--head ${num_lines}` option can be passed to run a test using only the top `num_lines` lines.
 
-### Interleaving Speech and Text Data
+## Interleaving Speech and Text Data
 
 ```bash
 HAFH='/mnt/scratch-artemis/anilkeshwani'
@@ -58,7 +58,7 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
     "${HAFH}/tmp/MLS/mls_english/train/head_transcripts_stratified_sample_2702009_uroman_shard_0_aligned_hubert.jsonl"
 ```
 
-### Extending SentencePiece Tokenizer and Model
+## Extending SentencePiece Tokenizer and Model
 
 ```bash
 ./extend_tinyllama_sentencepiece_dsus.py \
@@ -67,9 +67,18 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
     --n-dsus 5000
 ```
 
-### Checkpoint Conversion: Hugging Face to Megatron
+## Checkpoint Conversion: Hugging Face to Megatron
 
 See [Megatron-LM codebase](https://github.com/anilkeshwani/megatron-llm-deepspin) (EPFL fork) for [HF-Megatron weight conversion scripts](https://github.com/anilkeshwani/megatron-llm-deepspin/tree/main/weights_conversion) (both directions).
+
+## Dataset Formatting via Prompt Templates
+
+```bash
+./scripts/render_via_prompt.py \
+    --text-key 'raw_text' \
+    --prompt-template basic \
+    '/mnt/scratch-artemis/anilkeshwani/data/voxpopuli_hf/VoxPopuli_uroman_aligned_hubert.jsonl'
+```
 
 # Auxiliary Scripts
 
