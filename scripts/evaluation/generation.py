@@ -7,7 +7,6 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import jinja2
-from regex import F
 from transformers.models.whisper.english_normalizer import BasicTextNormalizer
 from vllm import CompletionOutput, LLM, RequestOutput, SamplingParams
 from vllm.sequence import RequestMetrics
@@ -92,7 +91,7 @@ def main(args: Namespace):
         # stop=[r"<\s>", "\n"],
     )
     llm = LLM(model=args.model, tokenizer_mode=args.tokenizer_mode)
-    outputs = llm.generate(prompts, sampling_params=sampling_params, use_tqdm=True)
+    outputs: list[RequestOutput] = llm.generate(prompts, sampling_params=sampling_params, use_tqdm=True)
     # NOTE the outputs attr of a RequestOutput object is a **list** of CompletionOutput objects
     model_generations_s: list[list[CompletionOutput]] = [output.outputs for output in outputs]  # "outputs" list attr
     observability_metrics: list[RequestMetrics | None] = [output.metrics for output in outputs]  # "metrics" attr
