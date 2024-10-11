@@ -12,18 +12,15 @@ from warnings import warn
 
 import torch
 from omegaconf import DictConfig, ListConfig
-
 from torch import nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, DistributedSampler
-
 from torchtune import config, modules, training, utils
 from torchtune.config._utils import _get_component_from_path
 from torchtune.data import padded_collate_packed
 from torchtune.datasets import ConcatDataset
 from torchtune.recipe_interfaces import FTRecipeInterface
 from torchtune.training import DummyProfiler, PROFILER_KEY
-
 from tqdm import tqdm
 
 
@@ -107,9 +104,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         # Disable for fp16, as we haven't validated "full" fp16 with this recipe, nor
         # enabled necessary features such as gradient scaling.
         if self._dtype == torch.float16:
-            raise ValueError(
-                "full fp16 training is not supported with this recipe. Please use bf16 or fp32 instead."
-            )
+            raise ValueError("full fp16 training is not supported with this recipe. Please use bf16 or fp32 instead.")
 
         # logging attributes
         self._output_dir = cfg.output_dir
@@ -223,9 +218,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         self._optimizer = self._setup_optimizer(
             cfg_optimizer=cfg.optimizer,
             optimizer_in_bwd=cfg.optimizer_in_bwd,
-            opt_state_dict=(
-                ckpt_dict[training.OPT_KEY] if self._resume_from_checkpoint else None
-            ),
+            opt_state_dict=(ckpt_dict[training.OPT_KEY] if self._resume_from_checkpoint else None),
         )
 
         # initialize loss
@@ -257,13 +250,8 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         # by the dataloader, the max_steps_per_epoch param set by the user and the
         # gradient_accumulation_steps param. This value is used for logging and tracking
         # training state. The computation should happen after the dataloader has been setup
-        self._steps_per_epoch = (
-            len(self._dataloader) // self._gradient_accumulation_steps
-        )
-        if (
-            self.max_steps_per_epoch is not None
-            and self.max_steps_per_epoch < self._steps_per_epoch
-        ):
+        self._steps_per_epoch = len(self._dataloader) // self._gradient_accumulation_steps
+        if self.max_steps_per_epoch is not None and self.max_steps_per_epoch < self._steps_per_epoch:
             self._steps_per_epoch = self.max_steps_per_epoch
         self.global_step = self.epochs_run * self._steps_per_epoch
 
@@ -272,9 +260,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         self._profiler = self._setup_profiler(cfg.get(PROFILER_KEY, None))
 
         # Used to ignore labels for loss computation
-        self.ignore_labels_cache = torch.full(
-            (cfg.batch_size, 1), self._loss_fn.ignore_index, device=self._device
-        )
+        self.ignore_labels_cache = torch.full((cfg.batch_size, 1), self._loss_fn.ignore_index, device=self._device)
 
     def _setup_profiler(
         self, cfg_profiler: Optional[DictConfig] = None
@@ -327,8 +313,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
             cfg_profiler["_component_"] = "torchtune.training.setup_torch_profiler"
         else:
             assert (
-                cfg_profiler.get("_component_")
-                == "torchtune.training.setup_torch_profiler"
+                cfg_profiler.get("_component_") == "torchtune.training.setup_torch_profiler"
             ), "Only torch profiler supported currently: component must be `torchtune.training.setup_torch_profiler`"
 
         profiler, profiler_cfg = config.instantiate(cfg_profiler)
@@ -360,16 +345,12 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
             training.compile_model(model)
 
         if enable_activation_checkpointing:
-            training.set_activation_checkpointing(
-                model, auto_wrap_policy={modules.TransformerSelfAttentionLayer}
-            )
+            training.set_activation_checkpointing(model, auto_wrap_policy={modules.TransformerSelfAttentionLayer})
 
         model.load_state_dict(model_state_dict)
 
         # Validate model was loaded in with the expected dtype.
-        training.validate_expected_param_dtype(
-            model.named_parameters(), dtype=self._dtype
-        )
+        training.validate_expected_param_dtype(model.named_parameters(), dtype=self._dtype)
         log.info(f"Model is initialized with precision {self._dtype}.")
 
         if self._device.type == "cuda":
@@ -389,18 +370,11 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         """
         if optimizer_in_bwd:
             # Maintain a dict of optims for every parameter.
-            optim_dict = {
-                p: config.instantiate(cfg_optimizer, [p])
-                for p in self._model.parameters()
-            }
+            optim_dict = {p: config.instantiate(cfg_optimizer, [p]) for p in self._model.parameters()}
             # Register optimizer step hooks on the model to run optimizer in backward.
-            training.register_optim_in_bwd_hooks(
-                model=self._model, optim_dict=optim_dict
-            )
+            training.register_optim_in_bwd_hooks(model=self._model, optim_dict=optim_dict)
             # Create a wrapper for checkpoint save/load of optimizer states when running in backward.
-            self._optim_ckpt_wrapper = training.create_optim_in_bwd_wrapper(
-                model=self._model, optim_dict=optim_dict
-            )
+            self._optim_ckpt_wrapper = training.create_optim_in_bwd_wrapper(model=self._model, optim_dict=optim_dict)
             # Load optimizer states. If optimizer states are being restored in an optimizer in backward
             # run, these need to have been saved with the same setting. Cannot restore from runs that did not
             # use optimizer in backward.
@@ -435,10 +409,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         iterable datasets and streaming datasets are not supported.
         """
         if isinstance(cfg_dataset, ListConfig):
-            datasets = [
-                config.instantiate(single_cfg_dataset, self._tokenizer)
-                for single_cfg_dataset in cfg_dataset
-            ]
+            datasets = [config.instantiate(single_cfg_dataset, self._tokenizer) for single_cfg_dataset in cfg_dataset]
             ds = ConcatDataset(datasets=datasets)
             packed = False
         else:
@@ -463,13 +434,15 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
             sampler=sampler,
             # dropping last avoids shape issues with compile + flex attention
             drop_last=cfg_dataset.get("drop_last", True),
-            collate_fn=partial(
-                collate_fn,
-                padding_idx=self._tokenizer.pad_id,
-                ignore_idx=self._loss_fn.ignore_index,
-            )
-            if not packed
-            else padded_collate_packed,
+            collate_fn=(
+                partial(
+                    collate_fn,
+                    padding_idx=self._tokenizer.pad_id,
+                    ignore_idx=self._loss_fn.ignore_index,
+                )
+                if not packed
+                else padded_collate_packed
+            ),
         )
 
         log.info("Dataset and Sampler are initialized.")
@@ -511,9 +484,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
         # Shift labels to compute loss
         # equivalent to doing labels[..., 1:] and logits[..., :-1, :]
         # But this way we dont need to slice the logits. We just add an ignore index to labels.
-        labels = torch.hstack(
-            (labels[..., 1:], self.ignore_labels_cache[: labels.shape[0]])
-        )
+        labels = torch.hstack((labels[..., 1:], self.ignore_labels_cache[: labels.shape[0]]))
         if not isinstance(logits, list):
             labels = labels.reshape(-1)
             logits = logits.reshape(-1, logits.size(-1))
@@ -554,8 +525,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
             for idx, batch in enumerate(self._dataloader):
                 if (
                     self.max_steps_per_epoch is not None
-                    and (idx // self._gradient_accumulation_steps)
-                    == self.max_steps_per_epoch
+                    and (idx // self._gradient_accumulation_steps) == self.max_steps_per_epoch
                 ):
                     break
 
@@ -590,9 +560,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
 
                     loss_to_log = running_loss.item()
                     pbar.update(1)
-                    pbar.set_description(
-                        f"{curr_epoch + 1}|{self.global_step}|Loss: {loss_to_log}"
-                    )
+                    pbar.set_description(f"{curr_epoch + 1}|{self.global_step}|Loss: {loss_to_log}")
 
                     # Log per-step metrics
                     if self.global_step % self._log_every_n_steps == 0:
@@ -609,9 +577,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
                             "tokens_per_second_per_gpu": num_tokens / time_per_step,
                         }
                         if self._device.type == "cuda" and self._log_peak_memory_stats:
-                            log_dict.update(
-                                training.get_memory_stats(device=self._device)
-                            )
+                            log_dict.update(training.get_memory_stats(device=self._device))
                         if self._clip_grad_norm is not None:
                             log_dict.update({"grad_norm": grad_norm})
                         self._metric_logger.log_dict(
@@ -628,10 +594,7 @@ class FullFinetuneRecipeSingleDevice(FTRecipeInterface):
                 if (
                     curr_epoch == 0
                     and self.profiler_profile_memory
-                    and idx
-                    == self.profiler_wait_steps
-                    + self.profiler_warmup_steps
-                    + self.profiler_active_steps
+                    and idx == self.profiler_wait_steps + self.profiler_warmup_steps + self.profiler_active_steps
                 ):
                     torch.cuda.memory._record_memory_history(enabled=None)
 
