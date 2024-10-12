@@ -54,9 +54,8 @@ checkpointer:
   model_type: LLAMA3_2
 resume_from_checkpoint: False
 
-# Fine-tuning arguments
-# TODO Refactor recipe to support max iterations
-epochs: 1000
+# Continued Pre-training / Fine-tuning arguments
+epochs: 5
 batch_size: 4
 gradient_accumulation_steps: 1
 max_steps_per_epoch: null
@@ -67,11 +66,11 @@ optimizer:
 
 lr_scheduler:
   _component_: torchtune.modules.lr_schedulers.get_cosine_schedule_with_warmup
-  # optimizer: null # set to optimizer above ?
   num_warmup_steps: 0 # The number of steps for the warmup phase.
-  num_training_steps: ${epochs * len(dataset) // (batch_size * gradient_accumulation_steps)} # TODO Amend once max iterations supported
   num_cycles: 0.5 # The number of waves in the cosine schedule. Defaults to 0.5. (decrease from the max value to 0 following a half-cosine).
-  last_epoch: -1 # The index of the last epoch when resuming training. Defaults to -1
+  last_epoch: -1 # The index of the last epoch when resuming training. Defaults to -1. Set to self.global_step - 1 in recipe.
+  # optimizer: # set dynamically in recipe
+  # num_training_steps: # set to total_epochs * _steps_per_epoch (:= len(self._dataloader) // self._gradient_accumulation_steps)
 
 loss:
   _component_: torchtune.modules.loss.CEWithChunkedOutputLoss
