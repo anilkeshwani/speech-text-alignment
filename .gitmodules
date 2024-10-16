@@ -7,3 +7,6 @@
 [submodule "submodules/torchtune"]
 	path = submodules/torchtune
 	url = https://github.com/pytorch/torchtune.git
+[submodule "tuna-lm"]
+	path = tuna-lm
+	url = git@github.com:anilkeshwani/tuna-lm.git
