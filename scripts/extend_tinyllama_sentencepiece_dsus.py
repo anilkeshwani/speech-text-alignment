@@ -70,17 +70,17 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def main(args: Namespace) -> None:
-    if not args.pretrained_dir.exists():
-        raise FileNotFoundError(f"Pretrained model directory {args.pretrained_dir} not found. Download artefacts first")
-    if args.output_dir.exists():
-        raise FileExistsError(f"Output directory {args.output_dir} already exists")
-    seed_everything(args.seed)
+def extend_llama_dsus(*, n_dsus, output_dir, pretrained_dir, seed, use_modality_tokens) -> None:
+    if not pretrained_dir.exists():
+        raise FileNotFoundError(f"Pretrained model directory {pretrained_dir} not found. Download artefacts first")
+    if output_dir.exists():
+        raise FileExistsError(f"Output directory {output_dir} already exists")
+    seed_everything(seed)
     m = sentencepiece_model_pb2.ModelProto()
-    with open(args.pretrained_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "rb") as f:
+    with open(pretrained_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "rb") as f:
         m.ParseFromString(f.read())
     vocab_size_curr = len(m.pieces)
-    dsu_tokens = [dsu2pua(idx_dsu) for idx_dsu in range(args.n_dsus)]
+    dsu_tokens = [dsu2pua(idx_dsu) for idx_dsu in range(n_dsus)]
     for token in dsu_tokens:
         new_token = sentencepiece_model_pb2.ModelProto().SentencePiece()
         new_token.piece = token
@@ -88,7 +88,7 @@ def main(args: Namespace) -> None:
         # new_token.type = 0 # NOTE For future use if needed
         m.pieces.append(new_token)
     LOGGER.info(f"Added {len(dsu_tokens)} DSU tokens ({dsu_tokens[0]}...{dsu_tokens[-1]}) to tokenizer")
-    if args.use_modality_tokens:
+    if use_modality_tokens:
         modality_tokens = [MODALITY_TOKEN_TEXT, MODALITY_TOKEN_SPEECH]
         for token in modality_tokens:
             new_token = sentencepiece_model_pb2.ModelProto().SentencePiece()
@@ -97,17 +97,17 @@ def main(args: Namespace) -> None:
             # new_token.type = 0 # NOTE For future use if needed
             m.pieces.append(new_token)
         LOGGER.info(f"Added modality switch tokens to tokenizer: {MODALITY_TOKEN_TEXT, MODALITY_TOKEN_SPEECH}")
-    if not args.output_dir.exists():
-        args.output_dir.mkdir(parents=True)
-    with open(args.output_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "xb") as f:
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+    with open(output_dir / SENTENCEPIECE_TOKENIZER_FILENAME, "xb") as f:
         f.write(m.SerializeToString())
     vocab_size_extd = len(m.pieces)
     n_new_tkns = vocab_size_extd - vocab_size_curr
     LOGGER.info(f"Extended tokenizer vocab size from {vocab_size_curr} to {vocab_size_extd} ({n_new_tkns} new tokens)")
-    LOGGER.info(f"Saved SentencePiece tokenizer to {args.output_dir / SENTENCEPIECE_TOKENIZER_FILENAME!s}")
+    LOGGER.info(f"Saved SentencePiece tokenizer to {output_dir / SENTENCEPIECE_TOKENIZER_FILENAME!s}")
     # Resize model embedding layer
-    model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(args.pretrained_dir)
-    LOGGER.info(f"Looaded weights from {args.pretrained_dir!s}")
+    model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(pretrained_dir)
+    LOGGER.info(f"Loaded weights from {pretrained_dir!s}")
     if vocab_size_curr != model.config.vocab_size:
         raise AssertionError(f"Vocab size mismatch model vs tokenizer: {vocab_size_curr} != {model.config.vocab_size}")
     n_pad_embd_vctrs = MAKE_VOCAB_SIZE_DIVISIBLE_BY - (vocab_size_extd % MAKE_VOCAB_SIZE_DIVISIBLE_BY)
@@ -131,9 +131,9 @@ def main(args: Namespace) -> None:
     LOGGER.info(f"Extended embedding layer from {vocab_size_curr} to {model.config.vocab_size}")
     LOGGER.info(f"Added {n_new_emb_vctrs} new embedding vectors: {n_new_tkns} trained and {n_new_emb_vctrs} padding")
     # Save model weights
-    model.save_pretrained(args.output_dir)
-    LOGGER.info(f"Saved tokenizer and model weights to {args.output_dir}")
+    model.save_pretrained(output_dir)
+    LOGGER.info(f"Saved tokenizer and model weights to {output_dir}")
 
 
 if __name__ == "__main__":
-    main(parse_args())
+    extend_llama_dsus(**vars(parse_args()))
