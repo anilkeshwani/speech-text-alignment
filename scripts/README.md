@@ -60,8 +60,10 @@ HAFH='/mnt/scratch-artemis/anilkeshwani'
 
 ## Extending SentencePiece Tokenizer and Model
 
+> [!INFO] Moved vocab extension functionality into package and renamed as vocab_extension.py. The module is still callable as a script.
+
 ```bash
-./extend_tinyllama_sentencepiece_dsus.py \
+./vocab_extension.py.py \
     /mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T/snapshots/036fa4651240b9a1487f709833b9e4b96b4c1574/ \
     --output-dir /mnt/scratch-artemis/anilkeshwani/models/base-hf/TinyLlama-1.1B-intermediate-step-1431k-3T-extended-sentencepiece-5000 \
     --n-dsus 5000
