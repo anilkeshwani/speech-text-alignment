@@ -18,6 +18,15 @@ export HAFH='/mnt/scratch-artemis/anilkeshwani' # $HOME away from $HOME; allows 
     '/mnt/scratch-artemis/anilkeshwani/data/voxpopuli_hf/VoxPopuli.jsonl'
 ```
 
+**Example for MLS (English) dev set**:
+
+```bash
+./scripts/uromanize.py \
+    --text-key 'transcript' \
+    '/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts.jsonl' \
+    --n-processes 8
+```
+
 This script parallelizes work over processes and assigns the number of available CPUs - 1 to perform preprocessing.
 
 ## Generating Datasets with Alignments and HuBERT Speech Tokens
