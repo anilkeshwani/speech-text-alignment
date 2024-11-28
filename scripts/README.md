@@ -47,9 +47,9 @@ Example for **MLS**, which uses IDs in its JSON lines manifest (filelist) not pa
 
 ```bash
 ./scripts/align_and_hubert_encode.py \
-    --jsonl "/mnt/scratch-artemis/anilkeshwani/tmp/mls_english_train_ss_head_200_uroman.jsonl" \
+    --jsonl "/mnt/scratch-artemis/anilkeshwani/data/MLS/mls_english/dev/transcripts_uroman.jsonl" \
     --ids-not-paths \
-    --audio-dir "${HAFH}/data/MLS/mls_english/train/audio" \
+    --audio-dir "/mnt/scratch-artemis/shared/datasets/MLS/dev/audio" \
     --lang 'eng' \
     --hubert-ckpt-path '/mnt/scratch-artemis/kshitij/clustering/feature_extraction/model/hubert_large_ll60k.pt' \
     --layer 22 \
