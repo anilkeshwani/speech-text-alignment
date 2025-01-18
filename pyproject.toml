@@ -30,6 +30,7 @@ dev = [
 "pre-commit==3.8.0",
 "shfmt-py==3.7.0.1",
 ]
+fairseq = ["fairseq>=0.12.2"]
 
 [tool.black]
 line-length = 120

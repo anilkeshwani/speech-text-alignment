@@ -1,5 +1,4 @@
 datasets>=2.20.0
-fairseq>=0.12.2
 joblib>=1.4.2
 librosa>=0.10.2
 matplotlib>=3.8.4
