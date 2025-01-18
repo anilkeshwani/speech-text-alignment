@@ -30,7 +30,9 @@ dev = [
 "pre-commit==3.8.0",
 "shfmt-py==3.7.0.1",
 ]
-fairseq = ["fairseq>=0.12.2"]
+fairseq = [
+"fairseq>=0.12.2", # principally used in sardalign/utils/features.py (and downstream modules)
+]
 
 [tool.black]
 line-length = 120
