@@ -4,6 +4,3 @@
 [submodule "uroman"]
 	path = submodules/uroman
 	url = git@github.com:isi-nlp/uroman.git
-[submodule "submodules/torchtune"]
-	path = submodules/torchtune
-	url = https://github.com/pytorch/torchtune.git
