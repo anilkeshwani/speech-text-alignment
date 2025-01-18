@@ -8,7 +8,7 @@ nltk==3.8.1
 npy_append_array==0.9.16
 numpy==1.26.4
 pandas==2.2.2
-regex==2024.5.15
+regex>=2024.5.15
 scikit_learn==1.4.2
 scipy==1.13.1
 seaborn==0.13.2
