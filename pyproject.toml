@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sardalign"
 authors = [
-{ name = "Anil Keshwani", email = "anilkeshwani1@gmail.com" },
+{ name = "Anil Keshwani", email = "anil.keshwani.academic@gmail.com" },
 { name = "Vineel Pratap", email = "vineelkpratap@meta.com" },
 ]
 description = "A speech audio-transcript aligner packaged up from fairseq/examples/mms"
