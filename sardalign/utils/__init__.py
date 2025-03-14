@@ -38,6 +38,15 @@ def dsu2pua(idx_dsu: int) -> str:
     return chr(dsu_ord)
 
 
+def pua2dsu(pua: str) -> int:
+    if len(pua) != 1:
+        raise ValueError(f"PUA should be a single character, got: {pua}")
+    dsu_ord = ord(pua)
+    if dsu_ord < PUA_PL_START or dsu_ord > PUA_PL_END:
+        raise ValueError(f"PUA ordinal out of PUA range: {dsu_ord}. PUA range: {PUA_PL_START:,} - {PUA_PL_END:,}")
+    return dsu_ord - PUA_PL_START
+
+
 def get_type_mapping(data):
     """
     Recursively generates a type mapping for the given data structure. Intended for deserialised JSON.
