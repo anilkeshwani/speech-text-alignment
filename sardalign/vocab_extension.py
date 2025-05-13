@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-import os
-import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
@@ -11,7 +9,6 @@ from sentencepiece import sentencepiece_model_pb2
 from transformers import AutoModelForCausalLM, PreTrainedModel
 from transformers.configuration_utils import PretrainedConfig
 
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import MODALITY_TOKEN_SPEECH, MODALITY_TOKEN_TEXT, SEED
 from sardalign.constants.megatron import MAKE_VOCAB_SIZE_DIVISIBLE_BY
 from sardalign.constants.tinyllama import SENTENCEPIECE_TOKENIZER_FILENAME
@@ -19,13 +16,6 @@ from sardalign.utils import dsu2pua, multivariate_normal_from_weights, seed_ever
 
 
 # NOTE Script structured to be trivially extensible for use of other base models in future
-
-logging.basicConfig(
-    format=LOG_FORMAT,
-    datefmt=LOG_DATEFMT,
-    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
-    stream=sys.stdout,
-)
 
 LOGGER = logging.getLogger(__file__)
 

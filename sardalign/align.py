@@ -1,6 +1,4 @@
 import logging
-import os
-import sys
 from itertools import groupby
 from pathlib import Path
 
@@ -10,17 +8,9 @@ import torchaudio
 import torchaudio.functional as F
 from torch import Tensor
 
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import EMISSION_INTERVAL, SAMPLING_FREQ
 from sardalign.utils.align import merge_repeats, Segment, time_to_frame
 
-
-logging.basicConfig(
-    format=LOG_FORMAT,
-    datefmt=LOG_DATEFMT,
-    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
-    stream=sys.stdout,
-)
 
 LOGGER = logging.getLogger(__name__)
 

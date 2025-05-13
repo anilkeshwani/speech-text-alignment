@@ -1,24 +1,15 @@
 #!/usr/bin/env python
 
 import logging
-import os
-import sys
 from pathlib import Path
 
 import joblib
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SEED
 
 
-logging.basicConfig(
-    format=LOG_FORMAT,
-    datefmt=LOG_DATEFMT,
-    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
-    stream=sys.stdout,
-)
 LOGGER = logging.getLogger(__name__)
 
 

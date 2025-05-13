@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import random
-import sys
 from argparse import ArgumentTypeError
 from pathlib import Path
 
@@ -12,16 +11,8 @@ from torch import Tensor
 from torch.distributions.multivariate_normal import MultivariateNormal
 from tqdm import tqdm
 
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import PUA_PL_END, PUA_PL_START
 
-
-logging.basicConfig(
-    format=LOG_FORMAT,
-    datefmt=LOG_DATEFMT,
-    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
-    stream=sys.stdout,
-)
 
 LOGGER = logging.getLogger(__name__)
 

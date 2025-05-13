@@ -1,6 +1,4 @@
 import logging
-import os
-import sys
 from pathlib import Path
 from typing import Callable
 
@@ -12,17 +10,9 @@ from fairseq.data.audio.audio_utils import get_features_or_waveform
 from npy_append_array import NpyAppendArray
 from torch import Tensor
 
-from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ
 from sardalign.utils import mls_id_to_path, read_jsonl
 
-
-logging.basicConfig(
-    format=LOG_FORMAT,
-    datefmt=LOG_DATEFMT,
-    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
-    stream=sys.stdout,
-)
 
 LOGGER = logging.getLogger(__name__)
 
