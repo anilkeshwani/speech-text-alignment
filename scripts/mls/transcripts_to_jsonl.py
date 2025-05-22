@@ -46,16 +46,28 @@ def parse_args() -> Namespace:
     return args
 
 
-def main(args: Namespace):
-    if args.output_jsonl.exists():
-        raise FileExistsError(f"JSON lines output file already exists at {args.output_jsonl}")
+def _read_transcripts_file(args: Namespace) -> list[str]:
     transcript_lines: list[str] = args.transcripts.read_text().splitlines()
     if args.head > 0:
         transcript_lines = transcript_lines[: args.head]
+    if len(transcript_lines) == 0:
+        raise ValueError(f"Transcripts file {args.transcripts} is empty")
+    if args.verbose:
+        LOGGER.info(f"Read {len(transcript_lines)} lines from {args.transcripts}")
+    return transcript_lines
+
+
+def _convert_transcripts_to_jsonl(
+    transcript_lines: list[str],
+    field_delimiter: str,
+    audio_dir: Path,
+    audio_ext: str,
+    verbose: bool,
+) -> list[dict]:
     mls: list[dict] = []
     for line in tqdm(transcript_lines):
-        mls_id, transcript = line.strip().split(args.field_delimiter)
-        audio_path = mls_id_to_path(mls_id, args.audio_dir, suffix=args.audio_ext)
+        mls_id, transcript = line.strip().split(field_delimiter)
+        audio_path = mls_id_to_path(mls_id, audio_dir, suffix=audio_ext)
         sample_dict = {
             "ID": mls_id,
             "transcript": transcript,
@@ -68,9 +80,25 @@ def main(args: Namespace):
                 "num_samples": audio_file_info.get("num_samples"),
             }
         except OSError:  # sox raises an OSError and not a FileNotFoundError; think this is a sys call to soxi
-            if args.verbose:
+            if verbose:
                 LOGGER.info(f"Skipped addition of metadata for missing audio {audio_path}")
         mls.append(sample_dict)
+    if verbose:
+        LOGGER.info(f"Converted {len(transcript_lines):,} transcript lines to {len(mls):,} JSON lines")
+    return mls
+
+
+def main(args: Namespace):
+    if args.output_jsonl.exists():
+        raise FileExistsError(f"JSON lines output file already exists at {args.output_jsonl}")
+    transcript_lines = _read_transcripts_file(args)
+    mls = _convert_transcripts_to_jsonl(
+        transcript_lines,
+        field_delimiter=args.field_delimiter,
+        audio_dir=args.audio_dir,
+        audio_ext=args.audio_ext,
+        verbose=args.verbose,
+    )
     write_jsonl(args.output_jsonl, mls)
     LOGGER.info(f"Wrote {len(mls)} samples to {args.output_jsonl!s}")
 
