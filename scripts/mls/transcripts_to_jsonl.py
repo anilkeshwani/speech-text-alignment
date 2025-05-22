@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 import logging
+import multiprocessing as mp
 import os
 import sys
 from argparse import ArgumentParser, Namespace
+from functools import partial
 from pathlib import Path
+from typing import Any
 
 import sox
 from tqdm import tqdm
@@ -31,14 +34,13 @@ def parse_args() -> Namespace:
     parser.add_argument("--audio-ext", type=str, default=".flac", help="File extension of the audio files.")
     parser.add_argument("--field-delimiter", type=str, default="\t", help="Field delimiter used in transcripts file.")
     parser.add_argument("--head", type=int, default=-1, help="Head samples to take; -1 for all")
+    parser.add_argument("--chunksize", type=int, default=100, help="Chunk size for parallel processing.")
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
     args = parser.parse_args()
 
-    # argument validation
     if not args.audio_dir.is_absolute():
-        raise ValueError("audio-dir must be an absolute path")  # require absolute paths for now
+        raise ValueError("audio-dir must be an absolute path")
 
-    # argument resolution
     if args.output_jsonl is None:
         head_suffix = f"_head_{args.head}" if args.head != -1 else ""
         stem = args.transcripts.stem + head_suffix
@@ -57,48 +59,63 @@ def _read_transcripts_file(args: Namespace) -> list[str]:
     return transcript_lines
 
 
-def _convert_transcripts_to_jsonl(
-    transcript_lines: list[str],
-    field_delimiter: str,
-    audio_dir: Path,
-    audio_ext: str,
-    verbose: bool,
-) -> list[dict]:
-    mls: list[dict] = []
-    for line in tqdm(transcript_lines):
+def _process_transcript_line(line: str, field_delimiter: str, audio_dir: Path, audio_ext: str) -> dict | None:
+    """Processes a single transcript line into a dictionary."""
+    try:
         mls_id, transcript = line.strip().split(field_delimiter)
         audio_path = mls_id_to_path(mls_id, audio_dir, suffix=audio_ext)
-        sample_dict = {
+        sample_dict: dict[str, Any] = {
             "ID": mls_id,
             "transcript": transcript,
         }
         try:
             audio_file_info = sox.file_info.info(audio_path)
-            sample_dict = sample_dict | {
-                "duration": audio_file_info.get("duration"),
-                "sample_rate": audio_file_info.get("sample_rate"),
-                "num_samples": audio_file_info.get("num_samples"),
-            }
-        except OSError:  # sox raises an OSError and not a FileNotFoundError; think this is a sys call to soxi
-            if verbose:
-                LOGGER.info(f"Skipped addition of metadata for missing audio {audio_path}")
-        mls.append(sample_dict)
-    if verbose:
-        LOGGER.info(f"Converted {len(transcript_lines):,} transcript lines to {len(mls):,} JSON lines")
-    return mls
+            sample_dict.update(
+                {
+                    "duration": audio_file_info.get("duration"),
+                    "sample_rate": audio_file_info.get("sample_rate"),
+                    "num_samples": audio_file_info.get("num_samples"),
+                }
+            )
+        except OSError:
+            LOGGER.warning(f"Skipped metadata for missing audio {audio_path}")
+            sample_dict.update({"duration": None, "sample_rate": None, "num_samples": None})
+        return sample_dict
+    except Exception as e:
+        LOGGER.exception(f"Failed to process line: {line}. Error: {e}")
+        return None
 
 
 def main(args: Namespace):
     if args.output_jsonl.exists():
         raise FileExistsError(f"JSON lines output file already exists at {args.output_jsonl}")
     transcript_lines = _read_transcripts_file(args)
-    mls = _convert_transcripts_to_jsonl(
-        transcript_lines,
+    _fn = partial(
+        _process_transcript_line,
         field_delimiter=args.field_delimiter,
         audio_dir=args.audio_dir,
         audio_ext=args.audio_ext,
-        verbose=args.verbose,
     )
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        results = list(
+            tqdm(
+                pool.imap(_fn, transcript_lines, chunksize=args.chunksize),
+                total=len(transcript_lines),
+                desc="Processing transcripts in parallel",
+            )
+        )
+
+    mls = [r for r in results if r is not None]  # filters out any None results from failures; catch these via logging
+
+    if len(mls) != len(transcript_lines):
+        LOGGER.warning(f"Processed {len(mls):,} samples out of {len(transcript_lines):,} lines in the transcripts file")
+    else:
+        LOGGER.info(f"Processed {len(mls):,} samples from the transcripts file")
+
+    if not args.output_jsonl.parent.exists():
+        args.output_jsonl.parent.mkdir(parents=True, exist_ok=True)
+        LOGGER.info(f"Created directory for output at {args.output_jsonl.parent}")
+
     write_jsonl(args.output_jsonl, mls)
     LOGGER.info(f"Wrote {len(mls)} samples to {args.output_jsonl!s}")
 
