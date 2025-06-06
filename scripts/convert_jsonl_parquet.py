@@ -20,7 +20,7 @@ def convert_jsonl_to_parquet(jsonl_path: Path, output_path: Path):
 
 
 def parse_args() -> Namespace:
-    parser = argparse.ArgumentParser(description="Recursively convert all JSONL files in a directory to Parquet.")
+    parser = argparse.ArgumentParser(description="Convert a JSON Lines file to Apache Parquet.")
     parser.add_argument("jsonl_path", type=Path, help="Path to the JSONL file")
     parser.add_argument("output_path", type=Path, help="Path to the output Parquet file")
     return parser.parse_args()
