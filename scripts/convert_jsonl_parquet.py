@@ -12,7 +12,7 @@ def convert_jsonl_to_parquet(jsonl_path: Path, output_path: Path):
         # Ensure the output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
         # Load and save
-        df = pd.read_json(jsonl_path, lines=True)
+        df = pd.read_json(jsonl_path, dtype=False, lines=True)
         df.to_parquet(output_path, engine="pyarrow", compression="snappy", index=False)
         print(f"✓ Converted: {jsonl_path} -> {output_path}")
     except Exception as e:
