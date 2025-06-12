@@ -3,55 +3,112 @@
 """Joins the time alignment columns onto the MLS dataset encoded as SpeechTokenizer RVQ tokens."""
 
 import gc
+import logging
+import os
+import sys
+from argparse import ArgumentParser, Namespace
 from math import ceil
 from pathlib import Path
 
-from datasets import load_dataset, Split
+from datasets import load_dataset
+from pandas import DataFrame
+
+from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
+from sardalign.constants.mls import MLS_SPLIT_SIZES
 
 
-# Constants
-MLS_SIZES = {"train": 10_808_037, "dev": 3_807, "test": 3_769}
+logging.basicConfig(
+    format=LOG_FORMAT,
+    datefmt=LOG_DATEFMT,
+    level=os.environ.get("LOGLEVEL", LOG_LEVEL).upper(),
+    stream=sys.stdout,
+)
+
+LOGGER = logging.getLogger(__file__)
+
+# NOTE Aligned and MLS SpeechTokenizer datasets are hard-coded due to dataset-specific logic e.g. column removal by name
+ALIGNED_REPO_ID: str = "anilkeshwani/mls-hubert_large_ll60k-layer_22"
+MLS_SPEECHTOKENIZER_REPO_ID: str = "anilkeshwani/mls-speechtokenizer"
+
+
+# Joined dataset repository ID (default format string to be used with RVQ layer)
+_JOINED_REPO_ID_DEFAULT: str = "mls-speechtokenizer-rvq_{}"
+
 
 # Arguments
-CHUNK_SIZE = 100_000
-SPLIT = Split.VALIDATION  # "train", "dev", or "test" # TODO BUG HF rejects "dev" or "validation" resp.
-ALIGNED_REPO_ID: str = "anilkeshwani/MLS_english_train_strat_sample_aligned_hubert"
-MLS_STOK_REPO_ID: str = "anilkeshwani/mls-speechtokenizer"
-JOINED_REPO_ID: str = "mls-speechtokenizer-RVQ-0-aligned"
-LOCAL_PARQUET_OUTPUT_DIR: Path = Path("/mnt/scratch-artemis/anilkeshwani/mls-st-aligned/dev").resolve()
+def parse_args() -> Namespace:
+    parser = ArgumentParser(description="Join MLS time alignment with SpeechTokenizer RVQ tokens.")
+    # Required
+    parser.add_argument("--split", type=str, required=True, choices=["train", "validation", "test"])
+    parser.add_argument("--output_dir", type=Path, required=True, help="Output directory for Parquet files")
+    parser.add_argument("--layer", type=int, required=True, help="Residual Vector Quantizer to use", choices=range(8))
+    # Optional
+    parser.add_argument("--block_size", type=int, default=100_000, help="Size of each block to process")
+    parser.add_argument("--joined_repo_id", type=str, help="Repository ID for the joined dataset")
+    args = parser.parse_args()
+    if args.joined_repo_id is None:
+        args.joined_repo_id = _JOINED_REPO_ID_DEFAULT.format(args.layer)
+    return args
 
-aligned = load_dataset(ALIGNED_REPO_ID, split="dev").remove_columns(["speech_tokens"]).to_pandas()
-stok = load_dataset(MLS_STOK_REPO_ID, split="validation").remove_columns([f"RVQ_{i}" for i in range(1, 8)]).to_pandas()
 
-# Check datasets contain matching samples
-ids_match = (aligned["ID"] == aligned["ID"]).all()
-if not ids_match:
-    raise ValueError("IDs do not match along the series. This may indicate a problem with the dataset.")
-else:
-    print("IDs match")
+def main(args: Namespace) -> None:
+    speech_tokens_colname = "speech_tokens"
+    aligned_drop_cols = [speech_tokens_colname]
+    mls_speechtokenizer_drop_cols = [f"RVQ_{i}" for i in range(8) if i != args.layer]
+    mls_speechtokenizer_rvq_colname = f"RVQ_{args.layer}"
+    mls_aligned: DataFrame = (
+        load_dataset(ALIGNED_REPO_ID, split=args.split).remove_columns(aligned_drop_cols).to_pandas()  # type: ignore
+    )
+    mls_speechtokenizer: DataFrame = (
+        load_dataset(MLS_SPEECHTOKENIZER_REPO_ID, split=args.split)
+        .remove_columns(mls_speechtokenizer_drop_cols)
+        .to_pandas()  # type: ignore
+    )
 
-# Rename RVQ_0 to speech_tokens (standard key)
-stok.rename(columns={"RVQ_0": "speech_tokens"}, inplace=True)
-print("Renamed column RVQ_0 -> speech_tokens")
-joined = aligned.merge(stok, on="ID", how="inner")  # Inner join on a shared key "ID"
+    # Checks
+    MLS_SPLIT_SIZE = MLS_SPLIT_SIZES[args.split]
+    if len(mls_aligned) != MLS_SPLIT_SIZE:
+        raise ValueError(
+            f"MLS aligned dataset size {len(mls_aligned)} does not match expected split size {MLS_SPLIT_SIZE}."
+        )
+    if len(mls_speechtokenizer) != MLS_SPLIT_SIZE:
+        raise ValueError(
+            f"MLS SpeechTokenizer dataset size {len(mls_speechtokenizer)} does not match expected split "
+            f"size {MLS_SPLIT_SIZE}."
+        )
+    if not (mls_aligned["ID"] == mls_speechtokenizer["ID"]).all():
+        raise ValueError("IDs do not match along the series. This may indicate a problem with the dataset.")
+    else:
+        LOGGER.info("IDs match")
 
-# Free up memory
-del aligned, stok
-gc.collect()
+    # Rename RVQ_0 to speech_tokens (standard key)
+    mls_speechtokenizer.rename(columns={mls_speechtokenizer_rvq_colname: speech_tokens_colname}, inplace=True)
+    LOGGER.info(f"Renamed column {mls_speechtokenizer_rvq_colname} -> {speech_tokens_colname}")
+    mls_joined: DataFrame = mls_aligned.merge(mls_speechtokenizer, on="ID", how="inner")
 
-print(f"{len(joined) = :,}")
-print(f"{joined.columns = }")
+    # Free up memory
+    del mls_aligned, mls_speechtokenizer
+    gc.collect()
 
-if not LOCAL_PARQUET_OUTPUT_DIR.exists():
-    print(f"Creating output directory: {LOCAL_PARQUET_OUTPUT_DIR}")
-    LOCAL_PARQUET_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    LOGGER.info(f"{len(mls_joined) = :,}")
+    LOGGER.info(f"{mls_joined.columns = }")
 
-# Serialise as Parquet
-n_chunks = ceil(len(joined) / CHUNK_SIZE)
-print(f"Splitting dataset into {n_chunks} chunks of size {CHUNK_SIZE:,} each...")
-for i in range(n_chunks):
-    chunk = joined.iloc[i * CHUNK_SIZE : min((i + 1) * CHUNK_SIZE, len(joined))]
-    print(f"Processing chunk {i + 1} of {n_chunks} (size: {len(chunk):,})")
-    chunk_label = str(i + 1).zfill(len(str(n_chunks)))
-    # Serialise as Parquet using pandas.DataFrame.to_parquet
-    chunk.to_parquet(LOCAL_PARQUET_OUTPUT_DIR / f"data-{chunk_label}-of-{n_chunks}-{JOINED_REPO_ID}-{SPLIT}.parquet")
+    if not args.output_dir.exists():
+        LOGGER.info(f"Creating output directory: {args.output_dir}")
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Serialise as Parquet
+    n_blocks = ceil(len(mls_joined) / args.block_size)
+    LOGGER.info(f"Splitting dataset into {n_blocks} blocks of size {args.block_size:,} each...")
+    for i in range(n_blocks):
+        block = mls_joined.iloc[i * args.block_size : min((i + 1) * args.block_size, len(mls_joined))]
+        block_label = str(i + 1).zfill(len(str(n_blocks)))
+        LOGGER.info(f"Processing block {block_label} of {n_blocks} (size: {len(block):,})")
+        # Serialise as Parquet using pandas.DataFrame.to_parquet
+        parquet_filename = f"{args.split}-{block_label}-of-{n_blocks}-{args.joined_repo_id}.parquet"
+        block.to_parquet(args.output_dir / parquet_filename)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)
