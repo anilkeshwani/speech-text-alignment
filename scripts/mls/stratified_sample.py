@@ -10,8 +10,8 @@ import pandas as pd
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SEED
+from sardalign.data import get_stratified_sample
 from sardalign.utils import count_lines, get_integer_sample_size, parse_arg_int_or_float
-from sardalign.utils.data import get_stratified_sample
 
 
 logging.basicConfig(
