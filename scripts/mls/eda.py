@@ -18,7 +18,8 @@ from tqdm import tqdm
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import TOKEN_DELIMITER_DEFAULT
-from sardalign.utils import mls_id_to_path, read_jsonl
+from sardalign.data.mls import mls_id_to_path
+from sardalign.utils import read_jsonl
 
 
 logging.basicConfig(

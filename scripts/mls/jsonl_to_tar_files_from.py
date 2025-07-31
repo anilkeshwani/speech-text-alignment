@@ -7,7 +7,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
-from sardalign.utils import mls_id_to_path, read_jsonl
+from sardalign.data.mls import mls_id_to_path
+from sardalign.utils import read_jsonl
 
 
 logging.basicConfig(

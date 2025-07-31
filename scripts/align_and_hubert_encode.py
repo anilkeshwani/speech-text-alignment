@@ -23,8 +23,9 @@ from sardalign.constants import (
     TOKENIZED_KEY,
     UROMAN_KEY,
 )
+from sardalign.data.mls import mls_id_to_path
 from sardalign.dump_km_label import ApplyKmeans
-from sardalign.utils import count_lines, echo_environment_info, get_device, mls_id_to_path, read_jsonl
+from sardalign.utils import count_lines, echo_environment_info, get_device, read_jsonl
 from sardalign.utils.align import get_span_times, get_spans, load_mms_aligner_model_and_dict
 from sardalign.utils.features import HubertLengthError, SimpleHubertFeaturizer
 

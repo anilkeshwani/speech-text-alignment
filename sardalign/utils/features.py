@@ -11,7 +11,8 @@ from npy_append_array import NpyAppendArray
 from torch import Tensor
 
 from sardalign.constants import SAMPLING_FREQ
-from sardalign.utils import mls_id_to_path, read_jsonl
+from sardalign.data.mls import mls_id_to_path
+from sardalign.utils import read_jsonl
 
 
 LOGGER = logging.getLogger(__name__)
