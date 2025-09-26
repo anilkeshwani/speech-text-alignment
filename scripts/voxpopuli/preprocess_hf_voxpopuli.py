@@ -6,15 +6,16 @@ import os
 import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from pprint import pprint
 from typing import Any
 
 import librosa
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from tqdm import tqdm
 
 from sardalign.config import LOG_DATEFMT, LOG_FORMAT, LOG_LEVEL
 from sardalign.constants import SAMPLING_FREQ
-from sardalign.constants.voxpopuli import VOXPOPULI_HF_DATASET_REPO
+from sardalign.constants.voxpopuli import VOXPOPULI_HF_DATASET_REPO, VOXPOPULI_LOCAL_DISK_DIR
 from sardalign.utils import count_lines
 
 
@@ -30,6 +31,10 @@ LOGGER = logging.getLogger(__file__)
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
+
+    parser.add_argument(
+        "--load-from-repo", action="store_true", help="Load dataset from the Hugging Face repo, not from disk"
+    )
     parser.add_argument("--output-jsonl", type=Path, required=True, help="Path to the output JSON lines file")
     parser.add_argument("--subset", type=str, default="en", help="Language subset")
     parser.add_argument("--split", type=str, default="train", help="Dataset split")  # TODO Choices?
@@ -79,10 +84,13 @@ def main(args: Namespace):
     if args.output_jsonl.exists():
         raise FileExistsError(f"JSON lines output file already exists at {args.output_jsonl}")
 
-    ds = load_dataset(VOXPOPULI_HF_DATASET_REPO, args.subset, trust_remote_code=True, cache_dir=args.cache_dir)
-    train = ds[args.split]
-    n_train = len(train)
-    LOGGER.info(f"Loaded VoxPopuli {args.subset} subset with {n_train:,} training samples from Hugging Face")
+    if args.load_from_repo:
+        ds = load_dataset(VOXPOPULI_HF_DATASET_REPO, args.subset, trust_remote_code=True, cache_dir=args.cache_dir)
+    else:
+        ds = load_from_disk(Path(VOXPOPULI_LOCAL_DISK_DIR) / args.subset)
+    ds_split = ds[args.split]
+    n_split = len(ds_split)
+    LOGGER.info(f"Loaded VoxPopuli {args.subset} subset with {n_split:,} training samples from Hugging Face")
 
     if not args.output_jsonl.parent.exists():
         args.output_jsonl.parent.mkdir(parents=True, exist_ok=True)
@@ -90,12 +98,12 @@ def main(args: Namespace):
 
     n_processed = 0
     with open(args.output_jsonl, "x") as f:
-        for sample in tqdm(train, total=n_train if args.head == -1 else args.head):
+        for sample in tqdm(ds_split, total=n_split if args.head == -1 else args.head):
             sample: dict[str, Any]
 
             if args.head != -1 and n_processed >= args.head:
                 LOGGER.info(
-                    f"Processed {args.head:,} / {n_train} total samples as specified by --head. Breaking early."
+                    f"Processed {args.head:,} / {n_split} total samples as specified by --head. Breaking early."
                 )
                 break
 
