@@ -9,7 +9,7 @@ We describe the process of aligning long audio files with their transcripts and 
 
 - Step 2: Download [uroman](https://github.com/isi-nlp/uroman) from Github. It is a universal romanizer which converts text in any script to the Latin alphabet. Use [this link](https://www.isi.edu/~ulf/uroman.html) to try their web interface.
   ```
-  git clone git@github.com:isi-nlp/uroman.git
+  git clone https://github.com/isi-nlp/uroman.git
   ```
 
 - Step 3: Install a few other dependencies

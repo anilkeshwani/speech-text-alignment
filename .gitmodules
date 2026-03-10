@@ -3,4 +3,4 @@
 	url = https://github.com/facebookresearch/fairseq.git
 [submodule "uroman"]
 	path = submodules/uroman
-	url = git@github.com:isi-nlp/uroman.git
+	url = https://github.com/isi-nlp/uroman.git
