@@ -9,7 +9,7 @@ READMEs for individual scripts and modules are found at directory level.
 ### Clone Repository
 
 ```bash
-git clone git@github.com:anilkeshwani/speech-text-alignment.git &&
+git clone https://github.com/anilkeshwani/speech-text-alignment.git &&
     cd speech-text-alignment &&
     git submodule update --init --recursive --progress
 ```
