@@ -68,7 +68,7 @@ nested.append(flattened_list[i : i + 1])  # BUG: should be i : i + length
 ---
 
 ## Fix 4: Over-Pinned Python Version + Inconsistent Dependencies
-**Status: TODO**
+**Status: DONE**
 **Priority: Medium | Effort: Low**
 
 ### Problem
@@ -141,3 +141,4 @@ Create a minimal but meaningful pytest test suite covering the pure-function cor
 | 1 | 2026-03-23 | Fix 1: Hardcoded paths → env vars | Replaced hardcoded paths with os.environ.get() in constants/__init__.py and constants/voxpopuli.py |
 | 1 | 2026-03-23 | Fix 2: Shell injection + torch.load | Replaced os.system with subprocess.run, added weights_only=True |
 | 1 | 2026-03-23 | Fix 3: Bug fixes | Fixed .parent() → .parent.mkdir() and unflatten_list off-by-one |
+| 1 | 2026-03-23 | Fix 4: Python version + deps | Relaxed requires-python, fixed tutorial torchaudio version |
