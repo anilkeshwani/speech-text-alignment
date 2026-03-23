@@ -8,7 +8,7 @@ Update this file after each iteration to communicate progress between loop itera
 ---
 
 ## Fix 1: Hardcoded Absolute Paths in Library Constants
-**Status: TODO**
+**Status: DONE**
 **Priority: High | Effort: Low**
 
 ### Problem
@@ -138,4 +138,4 @@ Create a minimal but meaningful pytest test suite covering the pure-function cor
 
 | Iteration | Date | Fixes Completed | Notes |
 |-----------|------|-----------------|-------|
-| — | — | — | Not yet started |
+| 1 | 2026-03-23 | Fix 1: Hardcoded paths → env vars | Replaced hardcoded paths with os.environ.get() in constants/__init__.py and constants/voxpopuli.py |
