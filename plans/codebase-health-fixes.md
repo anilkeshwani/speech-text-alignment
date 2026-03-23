@@ -86,7 +86,7 @@ nested.append(flattened_list[i : i + 1])  # BUG: should be i : i + length
 ---
 
 ## Fix 5: Automated Test Suite
-**Status: TODO**
+**Status: DONE**
 **Priority: High | Effort: Medium**
 
 ### Problem
@@ -142,3 +142,4 @@ Create a minimal but meaningful pytest test suite covering the pure-function cor
 | 1 | 2026-03-23 | Fix 2: Shell injection + torch.load | Replaced os.system with subprocess.run, added weights_only=True |
 | 1 | 2026-03-23 | Fix 3: Bug fixes | Fixed .parent() → .parent.mkdir() and unflatten_list off-by-one |
 | 1 | 2026-03-23 | Fix 4: Python version + deps | Relaxed requires-python, fixed tutorial torchaudio version |
+| 1 | 2026-03-23 | Fix 5: Test suite | Created 5 test files, 62 tests all passing, added pytest to dev deps |

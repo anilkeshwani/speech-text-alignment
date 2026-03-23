@@ -28,6 +28,7 @@ dev = [
 "isort==5.13.2",
 "pipreqs==0.5.0",
 "pre-commit==3.8.0",
+"pytest>=8.0",
 "shfmt-py==3.7.0.1",
 ]
 fairseq = [
@@ -42,3 +43,6 @@ profile = "black"
 line_length = 120
 lines_after_imports = 2
 force_alphabetical_sort_within_sections = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
