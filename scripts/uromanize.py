@@ -78,7 +78,7 @@ def main(args):
         raise FileExistsError(f"Uromanized JSON lines output file already exists at {args.output_jsonl}")
 
     if not args.output_jsonl.parent.exists():
-        args.output_jsonl.parent(parents=True, exist_ok=True)
+        args.output_jsonl.parent.mkdir(parents=True, exist_ok=True)
         LOGGER.info(f"Created directory for output at {args.output_jsonl.parent}")
 
     with open(args.input_jsonl) as f:

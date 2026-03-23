@@ -43,7 +43,7 @@ Update this file after each iteration to communicate progress between loop itera
 ---
 
 ## Fix 3: Live Bugs (`uromanize.py` and `tutorial/align.py`)
-**Status: TODO**
+**Status: DONE**
 **Priority: Medium | Effort: Low**
 
 ### Problem
@@ -140,3 +140,4 @@ Create a minimal but meaningful pytest test suite covering the pure-function cor
 |-----------|------|-----------------|-------|
 | 1 | 2026-03-23 | Fix 1: Hardcoded paths → env vars | Replaced hardcoded paths with os.environ.get() in constants/__init__.py and constants/voxpopuli.py |
 | 1 | 2026-03-23 | Fix 2: Shell injection + torch.load | Replaced os.system with subprocess.run, added weights_only=True |
+| 1 | 2026-03-23 | Fix 3: Bug fixes | Fixed .parent() → .parent.mkdir() and unflatten_list off-by-one |

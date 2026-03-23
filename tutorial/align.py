@@ -71,7 +71,7 @@ def unflatten_list(flattened_list: list[Any], lengths: list[int]) -> list[list[A
     i = 0
     nested = []
     for length in lengths:
-        nested.append(flattened_list[i : i + 1])
+        nested.append(flattened_list[i : i + length])
         i += length
     return nested
 
