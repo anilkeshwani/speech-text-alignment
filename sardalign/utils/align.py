@@ -2,6 +2,7 @@ import logging
 import math
 import os
 import re
+import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -39,12 +40,13 @@ def get_uroman_tokens(norm_transcripts: list[str], uroman_root_dir: str, iso: st
         for t in norm_transcripts:
             f.write(t + "\n")
 
-    assert os.path.exists(f"{uroman_root_dir}/uroman.pl"), "uroman not found"
-    cmd = f"perl {uroman_root_dir}/uroman.pl"
+    uroman_pl = f"{uroman_root_dir}/uroman.pl"
+    assert os.path.exists(uroman_pl), "uroman not found"
+    cmd = ["perl", uroman_pl]
     if iso in special_isos_uroman:
-        cmd += f" -l {iso} "
-    cmd += f" < {tf.name} > {tf2.name}"
-    os.system(cmd)
+        cmd.extend(["-l", iso])
+    with open(tf.name, "r") as stdin_f, open(tf2.name, "w") as stdout_f:
+        subprocess.run(cmd, stdin=stdin_f, stdout=stdout_f, check=True)
     outtexts = []
     with open(tf2.name) as f:
         for line in f:
@@ -102,7 +104,7 @@ def load_mms_aligner_model_and_dict(
             model_path_name,
         )
         assert os.path.exists(model_path_name)
-    state_dict = torch.load(model_path_name, map_location="cpu")
+    state_dict = torch.load(model_path_name, map_location="cpu", weights_only=True)
 
     model = wav2vec2_model(
         extractor_mode="layer_norm",
